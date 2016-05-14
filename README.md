@@ -15,7 +15,7 @@ and REST variable configuration.
 ## Installing
 
 You can install through the Arduino Library Manager. The package name is
-```ConfigManager```.
+**ConfigManager**.
 
 ## Usage
 
