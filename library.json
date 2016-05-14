@@ -1,0 +1,13 @@
+{
+  "name": "ConfigManager",
+  "keywords": "wifi, wi-fi, config",
+  "description": "ESP8266 WiFi connection manager",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/nrwiersma/ConfigManager.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "espressif",
+  "version": "0.1"
+}
