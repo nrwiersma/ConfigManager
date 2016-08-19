@@ -47,6 +47,14 @@ In your loop function, run the manager loop
 configManager.loop();
 ```
 
+Upload the ```index.html``` file found in the ```data``` directory into the SPIFFS.
+Instructions on how to do this vary based on your IDE. Below are links instructions
+on the most common IDEs:
+
+* [Arduino IDE](https://github.com/esp8266/Arduino/blob/master/doc/filesystem.md#uploading-files-to-file-system)
+
+* [Platform IO](http://docs.platformio.org/en/stable/platforms/espressif.html#uploading-files-to-file-system-spiffs)
+
 # Documentation
 
 ## Methods
