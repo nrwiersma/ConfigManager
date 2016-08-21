@@ -106,6 +106,6 @@ void loop()
 
 > Gets the settings set in ```addParameter```. The response type is ```application/json```.
 
-### POST /settings
+### PUT /settings
 
 > Sets the settings set in ```addParameter```. The request type is ```application/json```.
