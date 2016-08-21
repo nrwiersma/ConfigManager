@@ -5,6 +5,8 @@ struct Config {
     int8 hour;
 } config;
 
+ConfigManager configManager;
+
 void setup() {
     // Setup config manager
     configManager.setAPName("Demo");

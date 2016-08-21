@@ -168,7 +168,7 @@ void ConfigManager::startAP() {
 
     server.reset(new ESP8266WebServer(80));
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
-    server->on("/store", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
+    server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
     server->begin();
 
@@ -180,8 +180,11 @@ void ConfigManager::startAP() {
 
 void ConfigManager::startApi() {
     server.reset(new ESP8266WebServer(80));
-    server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));
-    server->on("/", HTTPMethod::HTTP_PUT, std::bind(&ConfigManager::handleRESTPut, this));
+    server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
+    server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
+    server->on("/settings", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));
+    server->on("/settings", HTTPMethod::HTTP_PUT, std::bind(&ConfigManager::handleRESTPut, this));
+    server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
     server->begin();
 }
 

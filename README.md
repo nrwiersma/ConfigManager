@@ -25,7 +25,7 @@ Include the library in your sketch
 #include <ConfigManager.h>
 ```
 
-Intialise a global instance of the library
+Initialize a global instance of the library
 
 ```cpp
 ConfigManager configManager;
@@ -91,3 +91,21 @@ void begin(T &config)
 void loop()
 ```
 > Handles any waiting REST requests.
+
+# Endpoints
+
+### GET /
+
+> Gets the HTML page that is used to set the Wifi SSID and password.
+
+### POST /
+
+> Sets the Wifi SSID and password. The form example can be found in the ```data``` directory.
+
+### GET /settings
+
+> Gets the settings set in ```addParameter```. The response type is ```application/json```.
+
+### POST /settings
+
+> Sets the settings set in ```addParameter```. The request type is ```application/json```.
