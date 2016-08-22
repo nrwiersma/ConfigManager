@@ -86,6 +86,12 @@ void begin(T &config)
 > Starts the configuration manager. The config parameter will be saved into
 > and retrieved from the EEPROM.
 
+### save
+```
+void save()
+```
+> Saves the config passed to the begin function to the EEPROM.
+
 ### loop
 ```
 void loop()
@@ -98,14 +104,53 @@ void loop()
 
 > Gets the HTML page that is used to set the Wifi SSID and password.
 
++ Response 200 *(text/html)*
+
 ### POST /
 
 > Sets the Wifi SSID and password. The form example can be found in the ```data``` directory.
 
++ Request *(application/x-www-form-urlencoded)*
+
+```
+ssid=access point&password=some password
+```
+
++ Request *(application/json)*
+
+```json
+{
+  "ssid": "access point",
+  "password": "some password"
+}
+```
+
 ### GET /settings
 
-> Gets the settings set in ```addParameter```. The response type is ```application/json```.
+> Gets the settings set in ```addParameter```.
+
++ Response 200 *(application/json)*
+
+```json
+{
+  "enabled": true,
+  "hour": 3
+}
+```
 
 ### PUT /settings
 
-> Sets the settings set in ```addParameter```. The request type is ```application/json```.
+> Sets the settings set in ```addParameter```.
+
++ Request *(application/json)*
+
+```json
+{
+  "enabled": false,
+  "hour": 4
+}
+```
+
++ Response 400 *(application/json)*
+
++ Response 204 *(application/json)*

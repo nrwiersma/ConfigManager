@@ -16,6 +16,27 @@ void ConfigManager::loop() {
     }
 }
 
+void ConfigManager::save() {
+    this->writeConfig();
+}
+
+JsonObject &ConfigManager::decodeJson(String jsonString)
+{
+    DynamicJsonBuffer jsonBuffer;
+
+    if (jsonString.length() == 0) {
+        return jsonBuffer.createObject();
+    }
+
+    JsonObject& obj = jsonBuffer.parseObject(jsonString);
+
+    if (!obj.success()) {
+        return jsonBuffer.createObject();
+    }
+
+    return obj;
+}
+
 void ConfigManager::handleAPGet() {
     SPIFFS.begin();
 
@@ -33,10 +54,21 @@ void ConfigManager::handleAPGet() {
 }
 
 void ConfigManager::handleAPPost() {
-    String ssid = server->arg("ssid");
-    String password = server->arg("password");
+    bool isJson = server->header("Content-Type") == "application/json";
+    String ssid;
+    String password;
     char ssidChar[32];
     char passwordChar[64];
+
+    if (isJson) {
+        JsonObject& obj = this->decodeJson(server->arg("plain"));
+
+        ssid = obj.get<String>("ssid");
+        password = obj.get<String>("password");
+    } else {
+        ssid = server->arg("ssid");
+        password = server->arg("password");
+    }
 
     if (ssid.length() == 0 || password.length() == 0) {
         server->send(400, "text/plain", "Invalid ssid or password.");
@@ -71,14 +103,7 @@ void ConfigManager::handleRESTGet() {
 }
 
 void ConfigManager::handleRESTPut() {
-    String json = server->arg("plain");
-    if (json.length() == 0) {
-        server->send(400, "application/json", "");
-        return;
-    }
-
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& obj = jsonBuffer.parseObject(json);
+    JsonObject& obj = this->decodeJson(server->arg("plain"));
     if (!obj.success()) {
         server->send(400, "application/json", "");
         return;
@@ -91,7 +116,7 @@ void ConfigManager::handleRESTPut() {
 
     writeConfig();
 
-    server->send(200, "application/json", "");
+    server->send(204, "application/json", "");
 }
 
 void ConfigManager::handleNotFound() {
@@ -153,6 +178,9 @@ void ConfigManager::setup() {
 }
 
 void ConfigManager::startAP() {
+    const char* headerKeys[] = {"Content-Type"};
+    size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
+
     Serial.println("Starting Access Point");
 
     IPAddress ip(192, 168, 1, 1);
@@ -167,6 +195,7 @@ void ConfigManager::startAP() {
     dnsServer.start(DNS_PORT, "*", ip);
 
     server.reset(new ESP8266WebServer(80));
+    server->collectHeaders(headerKeys, headerKeysSize);
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
@@ -179,7 +208,11 @@ void ConfigManager::startAP() {
 }
 
 void ConfigManager::startApi() {
+    const char* headerKeys[] = {"Content-Type"};
+    size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
+
     server.reset(new ESP8266WebServer(80));
+    server->collectHeaders(headerKeys, headerKeysSize);
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->on("/settings", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));

@@ -56,7 +56,7 @@ private:
  */
 class ConfigManager {
 public:
-    ConfigManager() {};
+    ConfigManager() {}
 
     void setAPName(const char *name);
     void setAPFilename(const char *filename);
@@ -76,6 +76,7 @@ public:
     void addParameter(const char *name, T *variable) {
         parameters.push_back(new ConfigParameter<T>(name, variable));
     }
+    void save();
 
 private:
     void *config;
@@ -84,6 +85,8 @@ private:
     char *apFilename = (char *)"/index.html";
     std::unique_ptr<ESP8266WebServer> server;
     std::list<BaseParameter*> parameters;
+
+    JsonObject &decodeJson(String jsonString);
 
     void handleAPGet();
     void handleAPPost();
