@@ -1,5 +1,6 @@
 {
   "name": "ConfigManager",
+  "version": "0.3",
   "keywords": "wifi, wi-fi, config",
   "description": "ESP8266 WiFi connection manager",
   "repository":
@@ -11,7 +12,7 @@
   "platforms": "espressif",
   "dependencies":
   {
-    "name": "Json",
+    "name": "ArduinoJson",
     "frameworks": "arduino"
   }
 }
