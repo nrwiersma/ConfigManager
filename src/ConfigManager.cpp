@@ -10,6 +10,10 @@ void ConfigManager::setAPFilename(const char *filename) {
     this->apFilename = (char *)filename;
 }
 
+void ConfigManager::setAPICallback(std::function<void(ESP8266WebServer*)> callback) {
+    this->apiCallback = callback;
+}
+
 void ConfigManager::loop() {
     if (server) {
         server->handleClient();
@@ -217,6 +221,11 @@ void ConfigManager::startApi() {
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->on("/settings", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));
     server->on("/settings", HTTPMethod::HTTP_PUT, std::bind(&ConfigManager::handleRESTPut, this));
+
+    if (apiCallback) {
+        apiCallback(server.get());
+    }
+
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
     server->begin();
 }

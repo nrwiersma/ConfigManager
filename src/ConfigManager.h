@@ -60,6 +60,7 @@ public:
 
     void setAPName(const char *name);
     void setAPFilename(const char *filename);
+    void setAPICallback(std::function<void(ESP8266WebServer*)> callback);
     void loop();
 
     template<typename T>
@@ -85,6 +86,7 @@ private:
     char *apFilename = (char *)"/index.html";
     std::unique_ptr<ESP8266WebServer> server;
     std::list<BaseParameter*> parameters;
+    std::function<void(ESP8266WebServer*)> apiCallback;
 
     JsonObject &decodeJson(String jsonString);
 

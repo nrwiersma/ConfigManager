@@ -71,6 +71,12 @@ void setAPFilename(const char *filename)
 ```
 > Sets the path in SPIFFS to the webpage to be served by the access point.
 
+### setAPICallback
+```
+void setAPICallback(std::function<void(ESP8266WebServer*)> callback)
+```
+> Sets a callback allowing customized http endpoints to be set when the api is setup.
+
 ### addParameter
 ```
 template<typename T>
