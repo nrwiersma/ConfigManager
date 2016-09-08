@@ -20,7 +20,7 @@ public:
 };
 
 /**
- * Parameter
+ * Config Parameter
  */
 template<typename T>
 class ConfigParameter : public BaseParameter {
@@ -32,7 +32,7 @@ public:
     }
 
     void fromJson(JsonObject *json) {
-        if (json->is<T>(name)) {
+        if (json->containsKey(name) && json->is<T>(name)) {
             *ptr = json->get<T>(name);
         }
     }
@@ -49,6 +49,36 @@ private:
     const char *name;
     T *ptr;
     std::function<void(const char*)> cb;
+};
+
+/**
+ * Config String Parameter
+ */
+class ConfigStringParameter : public BaseParameter {
+public:
+    ConfigStringParameter(const char *name, char *ptr, size_t length) {
+        this->name = name;
+        this->ptr = ptr;
+        this->length = length;
+    }
+
+    void fromJson(JsonObject *json) {
+        if (json->containsKey(name) && json->is<char *>(name)) {
+            const char * value = json->get<const char *>(name);
+
+            memset(ptr,'\n',length);
+            strncpy(ptr, const_cast<char*>(value), length - 1);
+        }
+    }
+
+    void toJson(JsonObject *json) {
+        json->set(name, ptr);
+    }
+
+private:
+    const char *name;
+    char *ptr;
+    size_t length;
 };
 
 /**
@@ -76,6 +106,9 @@ public:
     template<typename T>
     void addParameter(const char *name, T *variable) {
         parameters.push_back(new ConfigParameter<T>(name, variable));
+    }
+    void addParameter(const char *name, char *variable, size_t size) {
+        parameters.push_back(new ConfigStringParameter(name, variable, size));
     }
     void save();
 

@@ -84,6 +84,12 @@ void addParameter(const char *name, T *variable)
 ```
 > Adds a parameter to the REST interface.
 
+### addParameter (string)
+```
+void addParameter(const char *name, char *variable, size_t size)
+```
+> Adds a character array parameter to the REST interface.
+
 ### begin
 ```
 template<typename T>
