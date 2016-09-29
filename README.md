@@ -36,6 +36,7 @@ In your setup function start the manager
 ```cpp
 configManager.setAPName("Demo");
 configManager.setAPFilename("/index.html");
+configManager.addParameter("enabled", config.name, 20);
 configManager.addParameter("enabled", &config.enabled);
 configManager.addParameter("hour", &config.hour);
 configManager.begin(config);

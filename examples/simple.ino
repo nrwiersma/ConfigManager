@@ -12,7 +12,7 @@ void setup() {
     // Setup config manager
     configManager.setAPName("Demo");
     configManager.setAPFilename("/index.html");
-    configManager.addParameter("name", &config.name, 20);
+    configManager.addParameter("name", config.name, 20);
     configManager.addParameter("enabled", &config.enabled);
     configManager.addParameter("hour", &config.hour);
     configManager.begin(config);
