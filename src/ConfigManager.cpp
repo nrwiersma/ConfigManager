@@ -170,9 +170,12 @@ void ConfigManager::setup() {
     if (ssid != NULL) {
         WiFi.begin(ssid, password);
         if (wifiConnected()) {
-            Serial.print("Connected: ");
+            Serial.print("Connected to ");
+            Serial.print(ssid);
+            Serial.print(" with ");
             Serial.println(WiFi.localIP());
 
+            WiFi.mode(WIFI_STA);
             startApi();
             return;
         }
