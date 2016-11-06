@@ -159,7 +159,7 @@ bool ConfigManager::wifiConnected() {
 
 void ConfigManager::setup() {
     char ssid[32];
-    char *password = new char[64];
+    char password[64];
 
     Serial.println("Reading saved configuration");
 
@@ -167,13 +167,8 @@ void ConfigManager::setup() {
     EEPROM.get(32, password);
     readConfig();
 
-    if (password[0] == '\0') {
-        delete password;
-        password = NULL;
-    }
-
     if (ssid != NULL) {
-        WiFi.begin(ssid, password);
+        WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
         if (wifiConnected()) {
             Serial.print("Connected to ");
             Serial.print(ssid);
