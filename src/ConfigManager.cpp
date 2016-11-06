@@ -175,6 +175,7 @@ void ConfigManager::setup() {
             Serial.print(" with ");
             Serial.println(WiFi.localIP());
 
+            WiFi.mode(WIFI_STA);
             startApi();
             return;
         }
