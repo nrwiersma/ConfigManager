@@ -74,7 +74,7 @@ void ConfigManager::handleAPPost() {
         password = server->arg("password");
     }
 
-    if (ssid.length() == 0 || password.length() == 0) {
+    if (ssid.length() == 0) {
         server->send(400, "text/plain", "Invalid ssid or password.");
         return;
     }
@@ -159,13 +159,18 @@ bool ConfigManager::wifiConnected() {
 
 void ConfigManager::setup() {
     char ssid[32];
-    char password[64];
+    char *password = new char[64];
 
     Serial.println("Reading saved configuration");
 
     EEPROM.get(0, ssid);
     EEPROM.get(32, password);
     readConfig();
+
+    if (password[0] == '\0') {
+        delete password;
+        password = NULL;
+    }
 
     if (ssid != NULL) {
         WiFi.begin(ssid, password);
