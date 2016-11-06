@@ -74,7 +74,7 @@ void ConfigManager::handleAPPost() {
         password = server->arg("password");
     }
 
-    if (ssid.length() == 0 || password.length() == 0) {
+    if (ssid.length() == 0) {
         server->send(400, "text/plain", "Invalid ssid or password.");
         return;
     }
@@ -168,7 +168,7 @@ void ConfigManager::setup() {
     readConfig();
 
     if (ssid != NULL) {
-        WiFi.begin(ssid, password);
+        WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
         if (wifiConnected()) {
             Serial.print("Connected to ");
             Serial.print(ssid);
