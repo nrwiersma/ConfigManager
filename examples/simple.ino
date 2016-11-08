@@ -8,6 +8,12 @@ struct Config {
 
 ConfigManager configManager;
 
+void createCustomRoute(ESP8266WebServer *server) {
+    server->on("/custom", HTTPMethod::HTTP_GET, [server](){
+        server->send(200, "text/plain", "Hello, World!");
+    });
+}
+
 void setup() {
     // Setup config manager
     configManager.setAPName("Demo");
@@ -16,6 +22,8 @@ void setup() {
     configManager.addParameter("enabled", &config.enabled);
     configManager.addParameter("hour", &config.hour);
     configManager.begin(config);
+
+    configManager.setAPICallback(createCustomRoute);
 
     //
 }
