@@ -47,7 +47,7 @@ void ConfigManager::handleAPGet() {
     File f = SPIFFS.open(apFilename, "r");
     if (!f) {
         Serial.println("file open failed");
-        server->send(500, "text/html", "File not found");
+        server->send(404, "text/html", "File not found");
         return;
     }
 
