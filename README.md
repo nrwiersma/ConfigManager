@@ -1,4 +1,4 @@
-# ConfigManager
+![Logo](http://svg.wiersma.co.za/github/project?lang=cpp&title=ConfigManager&tag=wifi%20configuration%20manager)
 
 ESP8266 Wifi connection and configuration manager.
 
