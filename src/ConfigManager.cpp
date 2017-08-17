@@ -51,8 +51,7 @@ void ConfigManager::handleAPGet() {
         return;
     }
 
-    String content = f.readString();
-    server->send(200, "text/html", content);
+    server->streamFile(f, "text/html");
 
     f.close();
 }
