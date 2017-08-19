@@ -6,6 +6,10 @@ void ConfigManager::setAPName(const char *name) {
     this->apName = (char *)name;
 }
 
+void ConfigManager::setWifiConnectRetries(const int retries) {
+    this->wifiConnectRetries = retries;
+}
+
 void ConfigManager::setAPFilename(const char *filename) {
     this->apFilename = (char *)filename;
 }
@@ -138,7 +142,7 @@ bool ConfigManager::wifiConnected() {
     Serial.print("Waiting for WiFi to connect");
 
     int i = 0;
-    while (i < 20) {
+    while (i < wifiConnectRetries) {
         if (WiFi.status() == WL_CONNECTED) {
             Serial.println("");
             return true;
@@ -180,7 +184,8 @@ void ConfigManager::setup() {
         }
     }
 
-    startAP();
+    // startAP();
+    ESP.restart();    
 }
 
 void ConfigManager::startAP() {

@@ -2,9 +2,9 @@
 #define __CONFIGMANAGER_H__
 
 #include <DNSServer.h>
-#include <EEPROM.h>
+#include <C:\Users\jon\.platformio\packages\framework-arduinoespressif8266\libraries\EEPROM\EEPROM.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
+#include <C:\Users\jon\.platformio\packages\framework-arduinoespressif8266\libraries\ESP8266WebServer\src\ESP8266WebServer.h>
 #include <FS.h>
 #include <functional>
 #include <list>
@@ -90,6 +90,7 @@ public:
 
     void setAPName(const char *name);
     void setAPFilename(const char *filename);
+    void setWifiConnectRetries(const int);
     void setAPICallback(std::function<void(ESP8266WebServer*)> callback);
     void loop();
 
@@ -117,6 +118,7 @@ private:
     size_t configSize;
     char *apName = (char *)"Thing";
     char *apFilename = (char *)"/index.html";
+    int wifiConnectRetries = 20;
     std::unique_ptr<ESP8266WebServer> server;
     std::list<BaseParameter*> parameters;
     std::function<void(ESP8266WebServer*)> apiCallback;
