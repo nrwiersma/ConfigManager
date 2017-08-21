@@ -90,7 +90,8 @@ public:
 
     void setAPName(const char *name);
     void setAPFilename(const char *filename);
-    void setWifiConnectRetries(const int);
+    void setWifiConnectRetries(const int retries);
+    void setWifiConnectInterval(const int interval);
     void setAPICallback(std::function<void(ESP8266WebServer*)> callback);
     void loop();
 
@@ -119,6 +120,7 @@ private:
     char *apName = (char *)"Thing";
     char *apFilename = (char *)"/index.html";
     int wifiConnectRetries = 20;
+    int wifiConnectInterval = 500;
     std::unique_ptr<ESP8266WebServer> server;
     std::list<BaseParameter*> parameters;
     std::function<void(ESP8266WebServer*)> apiCallback;
