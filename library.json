@@ -1,16 +1,18 @@
 {
-    "name": "ConfigManager",
-    "version": "0.9",
-    "keywords": "wifi, wi-fi, config",
-    "description": "ESP8266 WiFi connection manager",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/JonSilver/ConfigManager.git"
-    },
-    "frameworks": "arduino",
-    "platforms": "espressif",
-    "dependencies": {
-        "name": "ArduinoJson",
-        "frameworks": "arduino"
-    }
+  "name": "ConfigManager",
+  "version": "0.8",
+  "keywords": "wifi, wi-fi, config",
+  "description": "ESP8266 WiFi connection manager",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/nrwiersma/ConfigManager.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "espressif",
+  "dependencies":
+  {
+    "name": "ArduinoJson",
+    "frameworks": "arduino"
+  }
 }

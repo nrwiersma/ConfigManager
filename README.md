@@ -1,5 +1,3 @@
-Nick Wiersma's excellent ConfigManager library with a few ideas for improvements implemented by me out of personal necessity.
-
 ![Logo](http://svg.wiersma.co.za/github/project?lang=cpp&title=ConfigManager&tag=wifi%20configuration%20manager)
 
 ESP8266 Wifi connection and configuration manager.
@@ -79,6 +77,18 @@ void setAPFilename(const char *filename)
 void setAPICallback(std::function<void(ESP8266WebServer*)> callback)
 ```
 > Sets a callback allowing customized http endpoints to be set when the api is setup.
+
+### setWifiConnectRetries
+```
+void setWifiConnectRetries(const int retries)
+```
+> Sets the number of Wifi connection retires. Defaults to 20.
+
+### setWifiConnectInterval
+```
+void setWifiConnectInterval(const int interval)
+```
+> Sets the interval (in milliseconds) between Wifi connection retries. Defaults to 500ms.
 
 ### addParameter
 ```
