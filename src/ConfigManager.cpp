@@ -1,9 +1,20 @@
 #include "ConfigManager.h"
 
 const byte DNS_PORT = 53;
+const char mimeHTML[] PROGMEM = "text/html";
+const char mimeJSON[] PROGMEM = "application/json";
+const char mimePlain[] PROGMEM = "text/plain";
 
 void ConfigManager::setAPName(const char *name) {
     this->apName = (char *)name;
+}
+
+void ConfigManager::setWifiConnectRetries(const int retries) {
+    this->wifiConnectRetries = retries;
+}
+
+void ConfigManager::setWifiConnectInterval(const int interval) {
+    this->wifiConnectInterval = interval;
 }
 
 void ConfigManager::setAPFilename(const char *filename) {
@@ -46,18 +57,18 @@ void ConfigManager::handleAPGet() {
 
     File f = SPIFFS.open(apFilename, "r");
     if (!f) {
-        Serial.println("file open failed");
-        server->send(404, "text/html", "File not found");
+        Serial.println(F("file open failed"));
+        server->send(404, FPSTR(mimeHTML), F("File not found"));
         return;
     }
 
-    server->streamFile(f, "text/html");
+    server->streamFile(f, FPSTR(mimeHTML));
 
     f.close();
 }
 
 void ConfigManager::handleAPPost() {
-    bool isJson = server->header("Content-Type") == "application/json";
+    bool isJson = server->header("Content-Type") == mimeHTML;
     String ssid;
     String password;
     char ssidChar[32];
@@ -74,7 +85,7 @@ void ConfigManager::handleAPPost() {
     }
 
     if (ssid.length() == 0) {
-        server->send(400, "text/plain", "Invalid ssid or password.");
+        server->send(400, FPSTR(mimePlain), F("Invalid ssid or password."));
         return;
     }
 
@@ -85,7 +96,7 @@ void ConfigManager::handleAPPost() {
     EEPROM.put(32, passwordChar);
     EEPROM.commit();
 
-    server->send(204, "text/plain", "Saved. Will attempt to reboot.");
+    server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
 
     ESP.restart();
 }
@@ -102,13 +113,13 @@ void ConfigManager::handleRESTGet() {
     String body;
     obj.printTo(body);
 
-    server->send(200, "application/json", body);
+    server->send(200, FPSTR(mimeHTML), body);
 }
 
 void ConfigManager::handleRESTPut() {
     JsonObject& obj = this->decodeJson(server->arg("plain"));
     if (!obj.success()) {
-        server->send(400, "application/json", "");
+        server->send(400, FPSTR(mimeHTML), "");
         return;
     }
 
@@ -119,26 +130,26 @@ void ConfigManager::handleRESTPut() {
 
     writeConfig();
 
-    server->send(204, "application/json", "");
+    server->send(204, FPSTR(mimeHTML), "");
 }
 
 void ConfigManager::handleNotFound() {
     if (!isIp(server->hostHeader()) ) {
         server->sendHeader("Location", String("http://") + toStringIP(server->client().localIP()), true);
-        server->send(302, "text/plain", ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
+        server->send(302, FPSTR(mimePlain), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
         server->client().stop();
         return;
     }
 
-    server->send(404, "text/plain", "");
+    server->send(404, FPSTR(mimePlain), "");
     server->client().stop();
 }
 
 bool ConfigManager::wifiConnected() {
-    Serial.print("Waiting for WiFi to connect");
+    Serial.print(F("Waiting for WiFi to connect"));
 
     int i = 0;
-    while (i < 20) {
+    while (i < wifiConnectRetries) {
         if (WiFi.status() == WL_CONNECTED) {
             Serial.println("");
             return true;
@@ -146,12 +157,12 @@ bool ConfigManager::wifiConnected() {
 
         Serial.print(".");
 
-        delay(500);
+        delay(wifiConnectInterval);
         i++;
     }
 
     Serial.println("");
-    Serial.println("Connection timed out");
+    Serial.println(F("Connection timed out"));
 
     return false;
 }
@@ -160,7 +171,7 @@ void ConfigManager::setup() {
     char ssid[32];
     char password[64];
 
-    Serial.println("Reading saved configuration");
+    Serial.println(F("Reading saved configuration"));
 
     EEPROM.get(0, ssid);
     EEPROM.get(32, password);
@@ -169,9 +180,9 @@ void ConfigManager::setup() {
     if (ssid != NULL) {
         WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
         if (wifiConnected()) {
-            Serial.print("Connected to ");
+            Serial.print(F("Connected to "));
             Serial.print(ssid);
-            Serial.print(" with ");
+            Serial.print(F(" with "));
             Serial.println(WiFi.localIP());
 
             WiFi.mode(WIFI_STA);
@@ -187,7 +198,7 @@ void ConfigManager::startAP() {
     const char* headerKeys[] = {"Content-Type"};
     size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
 
-    Serial.println("Starting Access Point");
+    Serial.println(F("Starting Access Point"));
 
     IPAddress ip(192, 168, 1, 1);
     WiFi.mode(WIFI_AP);

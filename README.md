@@ -1,3 +1,5 @@
+Nick Wiersma's excellent ConfigManager library with a few ideas for improvements implemented by me out of personal necessity.
+
 ![Logo](http://svg.wiersma.co.za/github/project?lang=cpp&title=ConfigManager&tag=wifi%20configuration%20manager)
 
 ESP8266 Wifi connection and configuration manager.
