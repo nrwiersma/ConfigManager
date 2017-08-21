@@ -2,9 +2,9 @@
 #define __CONFIGMANAGER_H__
 
 #include <DNSServer.h>
-#include <C:\Users\jon\.platformio\packages\framework-arduinoespressif8266\libraries\EEPROM\EEPROM.h>
+#include <EEPROM.h>
 #include <ESP8266WiFi.h>
-#include <C:\Users\jon\.platformio\packages\framework-arduinoespressif8266\libraries\ESP8266WebServer\src\ESP8266WebServer.h>
+#include <ESP8266WebServer.h>
 #include <FS.h>
 #include <functional>
 #include <list>

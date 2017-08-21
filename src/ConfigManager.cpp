@@ -1,9 +1,9 @@
 #include "ConfigManager.h"
 
 const byte DNS_PORT = 53;
-const char cTypeHTML[] PROGMEM = "text/html";
-const char cTypeJSON[] PROGMEM = "application/json";
-const char cTypePLAIN[] PROGMEM = "text/plain";
+const char mimeHTML[] PROGMEM = "text/html";
+const char mimeJSON[] PROGMEM = "application/json";
+const char mimePlain[] PROGMEM = "text/plain";
 
 void ConfigManager::setAPName(const char *name) {
     this->apName = (char *)name;
@@ -58,17 +58,17 @@ void ConfigManager::handleAPGet() {
     File f = SPIFFS.open(apFilename, "r");
     if (!f) {
         Serial.println(F("file open failed"));
-        server->send(404, FPSTR(cTypeHTML), F("File not found"));
+        server->send(404, FPSTR(mimeHTML), F("File not found"));
         return;
     }
 
-    server->streamFile(f, FPSTR(cTypeHTML));
+    server->streamFile(f, FPSTR(mimeHTML));
 
     f.close();
 }
 
 void ConfigManager::handleAPPost() {
-    bool isJson = server->header("Content-Type") == cTypeHTML;
+    bool isJson = server->header("Content-Type") == mimeHTML;
     String ssid;
     String password;
     char ssidChar[32];
@@ -85,7 +85,7 @@ void ConfigManager::handleAPPost() {
     }
 
     if (ssid.length() == 0) {
-        server->send(400, FPSTR(cTypePLAIN), F("Invalid ssid or password."));
+        server->send(400, FPSTR(mimePlain), F("Invalid ssid or password."));
         return;
     }
 
@@ -96,7 +96,7 @@ void ConfigManager::handleAPPost() {
     EEPROM.put(32, passwordChar);
     EEPROM.commit();
 
-    server->send(204, FPSTR(cTypePLAIN), F("Saved. Will attempt to reboot."));
+    server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
 
     ESP.restart();
 }
@@ -113,13 +113,13 @@ void ConfigManager::handleRESTGet() {
     String body;
     obj.printTo(body);
 
-    server->send(200, FPSTR(cTypeHTML), body);
+    server->send(200, FPSTR(mimeHTML), body);
 }
 
 void ConfigManager::handleRESTPut() {
     JsonObject& obj = this->decodeJson(server->arg("plain"));
     if (!obj.success()) {
-        server->send(400, FPSTR(cTypeHTML), "");
+        server->send(400, FPSTR(mimeHTML), "");
         return;
     }
 
@@ -130,18 +130,18 @@ void ConfigManager::handleRESTPut() {
 
     writeConfig();
 
-    server->send(204, FPSTR(cTypeHTML), "");
+    server->send(204, FPSTR(mimeHTML), "");
 }
 
 void ConfigManager::handleNotFound() {
     if (!isIp(server->hostHeader()) ) {
         server->sendHeader("Location", String("http://") + toStringIP(server->client().localIP()), true);
-        server->send(302, FPSTR(cTypePLAIN), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
+        server->send(302, FPSTR(mimePlain), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
         server->client().stop();
         return;
     }
 
-    server->send(404, FPSTR(cTypePLAIN), "");
+    server->send(404, FPSTR(mimePlain), "");
     server->client().stop();
 }
 
@@ -191,8 +191,7 @@ void ConfigManager::setup() {
         }
     }
 
-    // startAP();
-    ESP.restart();    
+    startAP();
 }
 
 void ConfigManager::startAP() {
