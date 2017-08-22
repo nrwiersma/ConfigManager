@@ -39,6 +39,8 @@ configManager.setAPFilename("/index.html");
 configManager.addParameter("name", config.name, 20);
 configManager.addParameter("enabled", &config.enabled);
 configManager.addParameter("hour", &config.hour);
+configManager.addParameter("password", config.password, 20, set);
+configManager.addParameter("version", &meta.version, get);
 configManager.begin(config);
 ```
 
@@ -95,13 +97,24 @@ void setWifiConnectInterval(const int interval)
 template<typename T>
 void addParameter(const char *name, T *variable)
 ```
-> Adds a parameter to the REST interface.
+or
+```
+template<typename T>
+void addParameter(const char *name, T *variable, ParameterMode mode)
+```
+> Adds a parameter to the REST interface. The optional mode can be set to ```set```
+> or ```get``` to make the parameter read or write only (defaults to ```both```).
 
 ### addParameter (string)
 ```
 void addParameter(const char *name, char *variable, size_t size)
 ```
-> Adds a character array parameter to the REST interface.
+or
+```
+void addParameter(const char *name, char *variable, size_t size, ParameterMode mode)
+```
+> Adds a character array parameter to the REST interface.The optional mode can be set to ```set```
+> or ```get``` to make the parameter read or write only (defaults to ```both```).
 
 ### begin
 ```
