@@ -68,7 +68,7 @@ void ConfigManager::handleAPGet() {
 }
 
 void ConfigManager::handleAPPost() {
-    bool isJson = server->header("Content-Type") == mimeHTML;
+    bool isJson = server->header("Content-Type") == FPSTR(mimeJSON);
     String ssid;
     String password;
     char ssidChar[32];
@@ -107,30 +107,38 @@ void ConfigManager::handleRESTGet() {
 
     std::list<BaseParameter*>::iterator it;
     for (it = parameters.begin(); it != parameters.end(); ++it) {
+        if ((*it)->getMode() == set) {
+            continue;
+        }
+
         (*it)->toJson(&obj);
     }
 
     String body;
     obj.printTo(body);
 
-    server->send(200, FPSTR(mimeHTML), body);
+    server->send(200, FPSTR(mimeJSON), body);
 }
 
 void ConfigManager::handleRESTPut() {
     JsonObject& obj = this->decodeJson(server->arg("plain"));
     if (!obj.success()) {
-        server->send(400, FPSTR(mimeHTML), "");
+        server->send(400, FPSTR(mimeJSON), "");
         return;
     }
 
     std::list<BaseParameter*>::iterator it;
     for (it = parameters.begin(); it != parameters.end(); ++it) {
+        if ((*it)->getMode() == get) {
+            continue;
+        }
+
         (*it)->fromJson(&obj);
     }
 
     writeConfig();
 
-    server->send(204, FPSTR(mimeHTML), "");
+    server->send(204, FPSTR(mimeJSON), "");
 }
 
 void ConfigManager::handleNotFound() {

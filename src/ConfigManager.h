@@ -10,11 +10,14 @@
 #include <list>
 #include "ArduinoJson.h"
 
+enum ParameterMode { get, set, both};
+
 /**
  * Base Parameter
  */
 class BaseParameter {
 public:
+    virtual ParameterMode getMode() = 0;
     virtual void fromJson(JsonObject *json) = 0;
     virtual void toJson(JsonObject *json) = 0;
 };
@@ -25,10 +28,15 @@ public:
 template<typename T>
 class ConfigParameter : public BaseParameter {
 public:
-    ConfigParameter(const char *name, T *ptr, std::function<void(const char*)> cb = NULL) {
+    ConfigParameter(const char *name, T *ptr, ParameterMode mode = both, std::function<void(const char*)> cb = NULL) {
         this->name = name;
         this->ptr = ptr;
         this->cb = cb;
+        this->mode = mode;
+    }
+
+    ParameterMode getMode() {
+        return this->mode;
     }
 
     void fromJson(JsonObject *json) {
@@ -49,6 +57,7 @@ private:
     const char *name;
     T *ptr;
     std::function<void(const char*)> cb;
+    ParameterMode mode;
 };
 
 /**
@@ -56,10 +65,15 @@ private:
  */
 class ConfigStringParameter : public BaseParameter {
 public:
-    ConfigStringParameter(const char *name, char *ptr, size_t length) {
+    ConfigStringParameter(const char *name, char *ptr, size_t length, ParameterMode mode = both) {
         this->name = name;
         this->ptr = ptr;
         this->length = length;
+        this->mode = mode;
+    }
+
+    ParameterMode getMode() {
+        return this->mode;
     }
 
     void fromJson(JsonObject *json) {
@@ -79,6 +93,7 @@ private:
     const char *name;
     char *ptr;
     size_t length;
+    ParameterMode mode;
 };
 
 /**
@@ -109,8 +124,15 @@ public:
     void addParameter(const char *name, T *variable) {
         parameters.push_back(new ConfigParameter<T>(name, variable));
     }
+    template<typename T>
+    void addParameter(const char *name, T *variable, ParameterMode mode) {
+        parameters.push_back(new ConfigParameter<T>(name, variable, mode));
+    }
     void addParameter(const char *name, char *variable, size_t size) {
         parameters.push_back(new ConfigStringParameter(name, variable, size));
+    }
+    void addParameter(const char *name, char *variable, size_t size, ParameterMode mode) {
+        parameters.push_back(new ConfigStringParameter(name, variable, size, mode));
     }
     void save();
 
