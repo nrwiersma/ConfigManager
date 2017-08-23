@@ -1,6 +1,7 @@
 #include "ConfigManager.h"
 
 const byte DNS_PORT = 53;
+const char magicBytes[] PROGMEM = "CM";
 const char mimeHTML[] PROGMEM = "text/html";
 const char mimeJSON[] PROGMEM = "application/json";
 const char mimePlain[] PROGMEM = "text/plain";
@@ -92,8 +93,10 @@ void ConfigManager::handleAPPost() {
     strncpy(ssidChar, ssid.c_str(), sizeof(ssidChar));
     strncpy(passwordChar, password.c_str(), sizeof(passwordChar));
 
-    EEPROM.put(0, ssidChar);
-    EEPROM.put(32, passwordChar);
+
+    EEPROM.put(0, FPSTR(magicBytes));
+    EEPROM.put(WIFI_OFFSET, ssidChar);
+    EEPROM.put(WIFI_OFFSET + 32, passwordChar);
     EEPROM.commit();
 
     server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
@@ -176,16 +179,18 @@ bool ConfigManager::wifiConnected() {
 }
 
 void ConfigManager::setup() {
+    char magic[2];
     char ssid[32];
     char password[64];
 
     Serial.println(F("Reading saved configuration"));
 
-    EEPROM.get(0, ssid);
-    EEPROM.get(32, password);
+    EEPROM.get(0, magic);
+    EEPROM.get(WIFI_OFFSET, ssid);
+    EEPROM.get(WIFI_OFFSET + 32, password);
     readConfig();
 
-    if (ssid != NULL) {
+    if (magic == magicBytes) {
         WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
         if (wifiConnected()) {
             Serial.print(F("Connected to "));
@@ -255,7 +260,7 @@ void ConfigManager::readConfig() {
     byte *ptr = (byte *)config;
 
     for (int i = 0; i < configSize; i++) {
-        *(ptr++) = EEPROM.read(96 + i);
+        *(ptr++) = EEPROM.read(CONFIG_OFFSET + i);
     }
 }
 
@@ -263,7 +268,7 @@ void ConfigManager::writeConfig() {
     byte *ptr = (byte *)config;
 
     for (int i = 0; i < configSize; i++) {
-        EEPROM.write(96 + i, *(ptr++));
+        EEPROM.write(CONFIG_OFFSET + i, *(ptr++));
     }
     EEPROM.commit();
 }

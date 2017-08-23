@@ -10,6 +10,9 @@
 #include <list>
 #include "ArduinoJson.h"
 
+#define WIFI_OFFSET 2
+#define CONFIG_OFFSET 98
+
 enum ParameterMode { get, set, both};
 
 /**
@@ -115,7 +118,7 @@ public:
         this->config = &config;
         this->configSize = sizeof(T);
 
-        EEPROM.begin(96 + this->configSize);
+        EEPROM.begin(CONFIG_OFFSET + this->configSize);
 
         setup();
     }
