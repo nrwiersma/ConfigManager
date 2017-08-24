@@ -13,6 +13,8 @@
 #define WIFI_OFFSET 2
 #define CONFIG_OFFSET 98
 
+enum Mode {ap, api};
+
 enum ParameterMode { get, set, both};
 
 /**
@@ -106,6 +108,7 @@ class ConfigManager {
 public:
     ConfigManager() {}
 
+    Mode getMode();
     void setAPName(const char *name);
     void setAPFilename(const char *filename);
     void setWifiConnectRetries(const int retries);
@@ -141,6 +144,7 @@ public:
     void save();
 
 private:
+    Mode mode;
     void *config;
     size_t configSize;
     char *apName = (char *)"Thing";

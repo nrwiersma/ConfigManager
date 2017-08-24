@@ -62,6 +62,12 @@ on the most common IDEs:
 
 ## Methods
 
+### getMode
+```
+Mode getMode()
+```
+> Gets the current mode, *ap* or *api*.
+
 ### setAPName
 ```
 void setAPName(const char *name)

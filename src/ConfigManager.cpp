@@ -7,6 +7,10 @@ const char mimeHTML[] PROGMEM = "text/html";
 const char mimeJSON[] PROGMEM = "application/json";
 const char mimePlain[] PROGMEM = "text/plain";
 
+Mode ConfigManager::getMode() {
+    return this->mode;
+}
+
 void ConfigManager::setAPName(const char *name) {
     this->apName = (char *)name;
 }
@@ -220,6 +224,8 @@ void ConfigManager::startAP() {
     const char* headerKeys[] = {"Content-Type"};
     size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
 
+    mode = ap;
+
     Serial.println(F("Starting Access Point"));
 
     IPAddress ip(192, 168, 1, 1);
@@ -249,6 +255,8 @@ void ConfigManager::startAP() {
 void ConfigManager::startApi() {
     const char* headerKeys[] = {"Content-Type"};
     size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
+
+    mode = api;
 
     server.reset(new ESP8266WebServer(80));
     server->collectHeaders(headerKeys, headerKeysSize);
