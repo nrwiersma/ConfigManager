@@ -85,6 +85,7 @@ void setAPFilename(const char *filename)
 void setAPTimeout(const int timeout)
 ```
 > Sets the access point timeout, in seconds (default 0, no timeout).
+>
 > **Note:** *The timeout starts when the access point is started, but is evaluated in the loop function.*
 
 ### setAPICallback
