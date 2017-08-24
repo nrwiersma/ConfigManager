@@ -1,12 +1,26 @@
 #include "ConfigManager.h"
 
 const byte DNS_PORT = 53;
+const char magicBytes[2] = {'C', 'M'};
+
 const char mimeHTML[] PROGMEM = "text/html";
 const char mimeJSON[] PROGMEM = "application/json";
 const char mimePlain[] PROGMEM = "text/plain";
 
+Mode ConfigManager::getMode() {
+    return this->mode;
+}
+
 void ConfigManager::setAPName(const char *name) {
     this->apName = (char *)name;
+}
+
+void ConfigManager::setAPFilename(const char *filename) {
+    this->apFilename = (char *)filename;
+}
+
+void ConfigManager::setAPTimeout(const int timeout) {
+    this->apTimeout = timeout;
 }
 
 void ConfigManager::setWifiConnectRetries(const int retries) {
@@ -17,8 +31,8 @@ void ConfigManager::setWifiConnectInterval(const int interval) {
     this->wifiConnectInterval = interval;
 }
 
-void ConfigManager::setAPFilename(const char *filename) {
-    this->apFilename = (char *)filename;
+void ConfigManager::setAPCallback(std::function<void(ESP8266WebServer*)> callback) {
+    this->apCallback = callback;
 }
 
 void ConfigManager::setAPICallback(std::function<void(ESP8266WebServer*)> callback) {
@@ -26,6 +40,14 @@ void ConfigManager::setAPICallback(std::function<void(ESP8266WebServer*)> callba
 }
 
 void ConfigManager::loop() {
+    if (mode == ap && apTimeout > 0 && ((millis() - apStart) / 1000) > apTimeout) {
+        ESP.restart();
+    }
+
+    if (dnsServer) {
+        dnsServer->processNextRequest();
+    }
+
     if (server) {
         server->handleClient();
     }
@@ -92,8 +114,10 @@ void ConfigManager::handleAPPost() {
     strncpy(ssidChar, ssid.c_str(), sizeof(ssidChar));
     strncpy(passwordChar, password.c_str(), sizeof(passwordChar));
 
-    EEPROM.put(0, ssidChar);
-    EEPROM.put(32, passwordChar);
+
+    EEPROM.put(0, magicBytes);
+    EEPROM.put(WIFI_OFFSET, ssidChar);
+    EEPROM.put(WIFI_OFFSET + 32, passwordChar);
     EEPROM.commit();
 
     server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
@@ -176,16 +200,18 @@ bool ConfigManager::wifiConnected() {
 }
 
 void ConfigManager::setup() {
+    char magic[2];
     char ssid[32];
     char password[64];
 
     Serial.println(F("Reading saved configuration"));
 
-    EEPROM.get(0, ssid);
-    EEPROM.get(32, password);
+    EEPROM.get(0, magic);
+    EEPROM.get(WIFI_OFFSET, ssid);
+    EEPROM.get(WIFI_OFFSET + 32, password);
     readConfig();
 
-    if (ssid != NULL) {
+    if (memcmp(magic, magicBytes, 2) == 0) {
         WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
         if (wifiConnected()) {
             Serial.print(F("Connected to "));
@@ -197,6 +223,9 @@ void ConfigManager::setup() {
             startApi();
             return;
         }
+    } else {
+        // We are at a cold start, don't bother timeing out.
+        apTimeout = 0;
     }
 
     startAP();
@@ -205,6 +234,8 @@ void ConfigManager::setup() {
 void ConfigManager::startAP() {
     const char* headerKeys[] = {"Content-Type"};
     size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
+
+    mode = ap;
 
     Serial.println(F("Starting Access Point"));
 
@@ -215,26 +246,30 @@ void ConfigManager::startAP() {
 
     delay(500); // Need to wait to get IP
 
-    DNSServer dnsServer;
-    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-    dnsServer.start(DNS_PORT, "*", ip);
+    dnsServer.reset(new DNSServer);
+    dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
+    dnsServer->start(DNS_PORT, "*", ip);
 
     server.reset(new ESP8266WebServer(80));
     server->collectHeaders(headerKeys, headerKeysSize);
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
+
+    if (apCallback) {
+        apCallback(server.get());
+    }
+
     server->begin();
 
-    while (1) {
-        dnsServer.processNextRequest();
-        server->handleClient();
-    }
+    apStart = millis();
 }
 
 void ConfigManager::startApi() {
     const char* headerKeys[] = {"Content-Type"};
     size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
+
+    mode = api;
 
     server.reset(new ESP8266WebServer(80));
     server->collectHeaders(headerKeys, headerKeysSize);
@@ -242,12 +277,12 @@ void ConfigManager::startApi() {
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->on("/settings", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));
     server->on("/settings", HTTPMethod::HTTP_PUT, std::bind(&ConfigManager::handleRESTPut, this));
+    server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 
     if (apiCallback) {
         apiCallback(server.get());
     }
 
-    server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
     server->begin();
 }
 
@@ -255,7 +290,7 @@ void ConfigManager::readConfig() {
     byte *ptr = (byte *)config;
 
     for (int i = 0; i < configSize; i++) {
-        *(ptr++) = EEPROM.read(96 + i);
+        *(ptr++) = EEPROM.read(CONFIG_OFFSET + i);
     }
 }
 
@@ -263,7 +298,7 @@ void ConfigManager::writeConfig() {
     byte *ptr = (byte *)config;
 
     for (int i = 0; i < configSize; i++) {
-        EEPROM.write(96 + i, *(ptr++));
+        EEPROM.write(CONFIG_OFFSET + i, *(ptr++));
     }
     EEPROM.commit();
 }
