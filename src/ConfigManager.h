@@ -111,6 +111,7 @@ public:
     Mode getMode();
     void setAPName(const char *name);
     void setAPFilename(const char *filename);
+    void setAPTimeout(const int timeout);
     void setWifiConnectRetries(const int retries);
     void setWifiConnectInterval(const int interval);
     void setAPCallback(std::function<void(ESP8266WebServer*)> callback);
@@ -147,13 +148,19 @@ private:
     Mode mode;
     void *config;
     size_t configSize;
+
     char *apName = (char *)"Thing";
     char *apFilename = (char *)"/index.html";
+    int apTimeout = 0;
+    unsigned long apStart = 0;
+
     int wifiConnectRetries = 20;
     int wifiConnectInterval = 500;
+
     std::unique_ptr<DNSServer> dnsServer;
     std::unique_ptr<ESP8266WebServer> server;
     std::list<BaseParameter*> parameters;
+
     std::function<void(ESP8266WebServer*)> apCallback;
     std::function<void(ESP8266WebServer*)> apiCallback;
 

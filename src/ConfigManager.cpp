@@ -15,16 +15,20 @@ void ConfigManager::setAPName(const char *name) {
     this->apName = (char *)name;
 }
 
+void ConfigManager::setAPFilename(const char *filename) {
+    this->apFilename = (char *)filename;
+}
+
+void ConfigManager::setAPTimeout(const int timeout) {
+    this->apTimeout = timeout;
+}
+
 void ConfigManager::setWifiConnectRetries(const int retries) {
     this->wifiConnectRetries = retries;
 }
 
 void ConfigManager::setWifiConnectInterval(const int interval) {
     this->wifiConnectInterval = interval;
-}
-
-void ConfigManager::setAPFilename(const char *filename) {
-    this->apFilename = (char *)filename;
 }
 
 void ConfigManager::setAPCallback(std::function<void(ESP8266WebServer*)> callback) {
@@ -36,6 +40,10 @@ void ConfigManager::setAPICallback(std::function<void(ESP8266WebServer*)> callba
 }
 
 void ConfigManager::loop() {
+    if (mode == ap && apTimeout > 0 && ((millis() - apStart) / 1000) > apTimeout) {
+        ESP.restart();
+    }
+
     if (dnsServer) {
         dnsServer->processNextRequest();
     }
@@ -215,6 +223,9 @@ void ConfigManager::setup() {
             startApi();
             return;
         }
+    } else {
+        // We are at a cold start, don't bother timeing out.
+        apTimeout = 0;
     }
 
     startAP();
@@ -250,6 +261,8 @@ void ConfigManager::startAP() {
     }
 
     server->begin();
+
+    apStart = millis();
 }
 
 void ConfigManager::startApi() {

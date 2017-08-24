@@ -66,7 +66,7 @@ on the most common IDEs:
 ```
 Mode getMode()
 ```
-> Gets the current mode, *ap* or *api*.
+> Gets the current mode, **ap** or **api**.
 
 ### setAPName
 ```
@@ -79,6 +79,13 @@ void setAPName(const char *name)
 void setAPFilename(const char *filename)
 ```
 > Sets the path in SPIFFS to the webpage to be served by the access point.
+
+### setAPTimeout
+```
+void setAPTimeout(const int timeout)
+```
+> Sets the access point timeout, in seconds (default 0, no timeout).
+> **Note:** *The timeout starts when the access point is started, but is evaluated in the loop function.*
 
 ### setAPICallback
 ```
