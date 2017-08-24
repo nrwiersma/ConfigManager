@@ -1,7 +1,8 @@
 #include "ConfigManager.h"
 
 const byte DNS_PORT = 53;
-const char magicBytes[] PROGMEM = "CM";
+const char magicBytes[2] = {'C', 'M'};
+
 const char mimeHTML[] PROGMEM = "text/html";
 const char mimeJSON[] PROGMEM = "application/json";
 const char mimePlain[] PROGMEM = "text/plain";
@@ -22,11 +23,19 @@ void ConfigManager::setAPFilename(const char *filename) {
     this->apFilename = (char *)filename;
 }
 
+void ConfigManager::setAPCallback(std::function<void(ESP8266WebServer*)> callback) {
+    this->apCallback = callback;
+}
+
 void ConfigManager::setAPICallback(std::function<void(ESP8266WebServer*)> callback) {
     this->apiCallback = callback;
 }
 
 void ConfigManager::loop() {
+    if (dnsServer) {
+        dnsServer->processNextRequest();
+    }
+
     if (server) {
         server->handleClient();
     }
@@ -94,7 +103,7 @@ void ConfigManager::handleAPPost() {
     strncpy(passwordChar, password.c_str(), sizeof(passwordChar));
 
 
-    EEPROM.put(0, FPSTR(magicBytes));
+    EEPROM.put(0, magicBytes);
     EEPROM.put(WIFI_OFFSET, ssidChar);
     EEPROM.put(WIFI_OFFSET + 32, passwordChar);
     EEPROM.commit();
@@ -190,7 +199,7 @@ void ConfigManager::setup() {
     EEPROM.get(WIFI_OFFSET + 32, password);
     readConfig();
 
-    if (magic == magicBytes) {
+    if (memcmp(magic, magicBytes, 2) == 0) {
         WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
         if (wifiConnected()) {
             Serial.print(F("Connected to "));
@@ -220,21 +229,21 @@ void ConfigManager::startAP() {
 
     delay(500); // Need to wait to get IP
 
-    DNSServer dnsServer;
-    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-    dnsServer.start(DNS_PORT, "*", ip);
+    dnsServer.reset(new DNSServer);
+    dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
+    dnsServer->start(DNS_PORT, "*", ip);
 
     server.reset(new ESP8266WebServer(80));
     server->collectHeaders(headerKeys, headerKeysSize);
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
-    server->begin();
 
-    while (1) {
-        dnsServer.processNextRequest();
-        server->handleClient();
+    if (apCallback) {
+        apCallback(server.get());
     }
+
+    server->begin();
 }
 
 void ConfigManager::startApi() {
@@ -247,12 +256,12 @@ void ConfigManager::startApi() {
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->on("/settings", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));
     server->on("/settings", HTTPMethod::HTTP_PUT, std::bind(&ConfigManager::handleRESTPut, this));
+    server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 
     if (apiCallback) {
         apiCallback(server.get());
     }
 
-    server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
     server->begin();
 }
 
