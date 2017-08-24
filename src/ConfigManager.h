@@ -10,6 +10,11 @@
 #include <list>
 #include "ArduinoJson.h"
 
+#define WIFI_OFFSET 2
+#define CONFIG_OFFSET 98
+
+enum Mode {ap, api};
+
 enum ParameterMode { get, set, both};
 
 /**
@@ -103,10 +108,13 @@ class ConfigManager {
 public:
     ConfigManager() {}
 
+    Mode getMode();
     void setAPName(const char *name);
     void setAPFilename(const char *filename);
+    void setAPTimeout(const int timeout);
     void setWifiConnectRetries(const int retries);
     void setWifiConnectInterval(const int interval);
+    void setAPCallback(std::function<void(ESP8266WebServer*)> callback);
     void setAPICallback(std::function<void(ESP8266WebServer*)> callback);
     void loop();
 
@@ -115,7 +123,7 @@ public:
         this->config = &config;
         this->configSize = sizeof(T);
 
-        EEPROM.begin(96 + this->configSize);
+        EEPROM.begin(CONFIG_OFFSET + this->configSize);
 
         setup();
     }
@@ -137,14 +145,23 @@ public:
     void save();
 
 private:
+    Mode mode;
     void *config;
     size_t configSize;
+
     char *apName = (char *)"Thing";
     char *apFilename = (char *)"/index.html";
+    int apTimeout = 0;
+    unsigned long apStart = 0;
+
     int wifiConnectRetries = 20;
     int wifiConnectInterval = 500;
+
+    std::unique_ptr<DNSServer> dnsServer;
     std::unique_ptr<ESP8266WebServer> server;
     std::list<BaseParameter*> parameters;
+
+    std::function<void(ESP8266WebServer*)> apCallback;
     std::function<void(ESP8266WebServer*)> apiCallback;
 
     JsonObject &decodeJson(String jsonString);
