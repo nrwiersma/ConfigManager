@@ -30,9 +30,8 @@ void setup() {
     configManager.addParameter("hour", &config.hour);
     configManager.addParameter("password", config.password, 20, set);
     configManager.addParameter("version", &meta.version, get);
-    configManager.begin(config);
-
     configManager.setAPICallback(createCustomRoute);
+    configManager.begin(config);
 
     //
 }
