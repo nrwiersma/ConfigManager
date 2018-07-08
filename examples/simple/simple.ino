@@ -3,23 +3,26 @@
 struct Config {
     char name[20];
     bool enabled;
-    int8 hour;
+    int8_t hour;
     char password[20];
 } config;
 
 struct Metadata {
-    int8 version;
+    int8_t version;
 } meta;
 
 ConfigManager configManager;
 
-void createCustomRoute(ESP8266WebServer *server) {
+void createCustomRoute(WebServer *server) {
     server->on("/custom", HTTPMethod::HTTP_GET, [server](){
         server->send(200, "text/plain", "Hello, World!");
     });
 }
 
 void setup() {
+    Serial.begin(115200);
+    Serial.println("");
+
     meta.version = 3;
 
     // Setup config manager
@@ -30,8 +33,10 @@ void setup() {
     configManager.addParameter("hour", &config.hour);
     configManager.addParameter("password", config.password, 20, set);
     configManager.addParameter("version", &meta.version, get);
-    configManager.setAPICallback(createCustomRoute);
     configManager.begin(config);
+
+    configManager.setAPCallback(createCustomRoute);
+    configManager.setAPICallback(createCustomRoute);
 
     //
 }
