@@ -2,7 +2,7 @@
   "name": "ConfigManager",
   "version": "1.0",
   "keywords": "wifi, wi-fi, config",
-  "description": "ESP8266 WiFi connection manager",
+  "description": "WiFi connection manager for ESP8266 and ESP32",
   "repository":
   {
     "type": "git",
