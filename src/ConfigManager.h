@@ -3,15 +3,27 @@
 
 #include <DNSServer.h>
 #include <EEPROM.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
 #include <FS.h>
+
+#if defined(ARDUINO_ARCH_ESP8266) //ESP8266
+    #include <ESP8266WiFi.h>
+    #include <ESP8266WebServer.h>
+#elif defined(ARDUINO_ARCH_ESP32) //ESP32
+    #include <SPIFFS.h>
+    #include <WiFi.h>
+    #include <WebServer.h>
+#endif
+
 #include <functional>
 #include <list>
 #include "ArduinoJson.h"
 
 #define WIFI_OFFSET 2
 #define CONFIG_OFFSET 98
+
+#if defined(ARDUINO_ARCH_ESP8266) //ESP8266
+    using WebServer = ESP8266WebServer;
+#endif
 
 enum Mode {ap, api};
 
@@ -114,8 +126,8 @@ public:
     void setAPTimeout(const int timeout);
     void setWifiConnectRetries(const int retries);
     void setWifiConnectInterval(const int interval);
-    void setAPCallback(std::function<void(ESP8266WebServer*)> callback);
-    void setAPICallback(std::function<void(ESP8266WebServer*)> callback);
+    void setAPCallback(std::function<void(WebServer*)> callback);
+    void setAPICallback(std::function<void(WebServer*)> callback);
     void loop();
 
     template<typename T>
@@ -158,11 +170,11 @@ private:
     int wifiConnectInterval = 500;
 
     std::unique_ptr<DNSServer> dnsServer;
-    std::unique_ptr<ESP8266WebServer> server;
+    std::unique_ptr<WebServer> server;
     std::list<BaseParameter*> parameters;
 
-    std::function<void(ESP8266WebServer*)> apCallback;
-    std::function<void(ESP8266WebServer*)> apiCallback;
+    std::function<void(WebServer*)> apCallback;
+    std::function<void(WebServer*)> apiCallback;
 
     JsonObject &decodeJson(String jsonString);
 
