@@ -1,9 +1,9 @@
 ![Logo](http://svg.wiersma.co.za/github/project?lang=cpp&title=ConfigManager&tag=wifi%20configuration%20manager)
 
-ESP8266 Wifi connection and configuration manager.
+Wifi connection and configuration manager for ESP8266 and ESP32.
 
 This library was made to ease the complication of configuring Wifi and other
-settings on an ESP8266. It is roughly split into two parts, Wifi configuration
+settings on an ESP8266 or ESP32. It is roughly split into two parts, Wifi configuration
 and REST variable configuration.
 
 # Requires
@@ -88,9 +88,15 @@ void setAPTimeout(const int timeout)
 >
 > **Note:** *The timeout starts when the access point is started, but is evaluated in the loop function.*
 
+### setAPCallback
+```
+void setAPCallback(std::function<void(WebServer*)> callback)
+```
+> Sets a callback allowing customized http endpoints to be set when the access point is setup.
+
 ### setAPICallback
 ```
-void setAPICallback(std::function<void(ESP8266WebServer*)> callback)
+void setAPICallback(std::function<void(WebServer*)> callback)
 ```
 > Sets a callback allowing customized http endpoints to be set when the api is setup.
 
