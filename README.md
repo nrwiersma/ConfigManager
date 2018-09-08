@@ -54,9 +54,17 @@ Upload the ```index.html``` file found in the ```data``` directory into the SPIF
 Instructions on how to do this vary based on your IDE. Below are links instructions
 on the most common IDEs:
 
+#### ESP8266
+
 * [Arduino IDE](http://arduino-esp8266.readthedocs.io/en/latest/filesystem.html#uploading-files-to-file-system)
 
 * [Platform IO](http://docs.platformio.org/en/stable/platforms/espressif.html#uploading-files-to-file-system-spiffs)
+
+#### ESP32
+
+* [Arduino IDE](https://github.com/me-no-dev/arduino-esp32fs-plugin)
+
+* [Platform IO](http://docs.platformio.org/en/stable/platforms/espressif32.html#uploading-files-to-file-system-spiffs)
 
 # Documentation
 
