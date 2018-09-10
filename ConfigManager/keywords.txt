@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For ConfigManager
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ConfigManager	KEYWORD1
+ConfigParameter	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+setAPName	KEYWORD2
+setAPFilename	KEYWORD2
+setWifiConnectRetries	KEYWORD2
+setWifiConnectInterval	KEYWORD2
+setAPCallback   KEYWORD2
+setAPICallback  KEYWORD2
+addParameter	KEYWORD2
+begin	KEYWORD2
+loop	KEYWORD2
+save	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+#	LITERAL1
