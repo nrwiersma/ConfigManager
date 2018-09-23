@@ -15,6 +15,10 @@ void ConfigManager::setAPName(const char *name) {
     this->apName = (char *)name;
 }
 
+void ConfigManager::setAPPassword(const char *password) {
+    this->apPassword = (char *)password;
+}
+
 void ConfigManager::setAPFilename(const char *filename) {
     this->apFilename = (char *)filename;
 }
@@ -242,7 +246,7 @@ void ConfigManager::startAP() {
     IPAddress ip(192, 168, 1, 1);
     WiFi.mode(WIFI_AP);
     WiFi.softAPConfig(ip, ip, IPAddress(255, 255, 255, 0));
-    WiFi.softAP(apName);
+    WiFi.softAP(apName, apPassword);
 
     delay(500); // Need to wait to get IP
 

@@ -82,6 +82,13 @@ void setAPName(const char *name)
 ```
 > Sets the name used for the access point.
 
+### setAPPassword
+```
+void setAPPassword(const char *password)
+```
+> Sets the password used for the access point. For WPA2-PSK network it should be at least 8 character long.
+> If not specified, the access point will be open for anybody to connect to.
+
 ### setAPFilename
 ```
 void setAPFilename(const char *filename)
