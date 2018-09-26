@@ -122,6 +122,7 @@ public:
 
     Mode getMode();
     void setAPName(const char *name);
+    void setAPPassword(const char *password);
     void setAPFilename(const char *filename);
     void setAPTimeout(const int timeout);
     void setWifiConnectRetries(const int retries);
@@ -162,6 +163,7 @@ private:
     size_t configSize;
 
     char *apName = (char *)"Thing";
+    char *apPassword = NULL;
     char *apFilename = (char *)"/index.html";
     int apTimeout = 0;
     unsigned long apStart = 0;
