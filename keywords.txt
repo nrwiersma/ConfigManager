@@ -13,6 +13,7 @@ ConfigParameter	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 setAPName	KEYWORD2
+setAPPassword	KEYWORD2
 setAPFilename	KEYWORD2
 setWifiConnectRetries	KEYWORD2
 setWifiConnectInterval	KEYWORD2
