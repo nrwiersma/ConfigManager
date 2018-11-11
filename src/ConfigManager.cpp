@@ -246,14 +246,14 @@ void ConfigManager::startAP() {
     WiFi.mode(WIFI_AP);
     WiFi.softAP(apName, apPassword);
 	
-	delay(500); // Need to wait to get IP
+    delay(500); // Need to wait to get IP
 	
-	IPAddress ip(192, 168, 1, 1);
-	IPAddress NMask(255, 255, 255, 0);
-	WiFi.softAPConfig(ip, ip, NMask);
+    IPAddress ip(192, 168, 1, 1);
+    IPAddress NMask(255, 255, 255, 0);
+    WiFi.softAPConfig(ip, ip, NMask);
 	
-	IPAddress myIP = WiFi.softAPIP();
-	Serial.print("AP IP address: ");
+    IPAddress myIP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
     Serial.println(myIP);
 
     dnsServer.reset(new DNSServer);
