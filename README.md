@@ -1,5 +1,7 @@
 ![Logo](http://svg.wiersma.co.za/github/project?lang=cpp&title=ConfigManager&tag=wifi%20configuration%20manager)
 
+[![arduino-library-badge](http://www.ardu-badge.com/badge/ConfigManager.svg)](http://www.ardu-badge.com/ConfigManager)
+
 Wifi connection and configuration manager for ESP8266 and ESP32.
 
 This library was made to ease the complication of configuring Wifi and other
