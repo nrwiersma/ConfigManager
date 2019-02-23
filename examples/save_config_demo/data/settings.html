@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.16.0/jquery.validate.min.js"></script>
+    <style>
+      body {
+        color: #434343;
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+        font-size: 14px;
+        line-height: 1.42857142857143;
+        padding: 20px;
+      }
+
+      .container {
+        margin: 0 auto;
+        max-width: 400px;
+      }
+
+      form .error {
+        color: #8A1F11 !important;
+        border-color: #8A1F11;
+      }
+
+      label.error {
+        text-transform: none
+      }
+
+      p.error {
+        margin-bottom: 10px
+      }
+
+      p.inline-errors, p.error {
+        background: none
+          border-color: none
+        border: none
+        clear: both
+        font-size: 12px
+      }
+
+      form .field-group {
+        box-sizing: border-box;
+        clear: both;
+        padding: 4px 0;
+        position: relative;
+        margin: 1px 0;
+        width: 100%;
+      }
+
+      form .field-group > label {
+        color: #757575;
+        display: block;
+        margin: 0 0 5px 0;
+        padding: 5px 0 0;
+        position: relative;
+        word-wrap: break-word;
+      }
+
+      input {
+        background: #fff;
+        border: 1px solid #d0d0d0;
+        border-radius: 2px;
+        box-sizing: border-box;
+        color: #434343;
+        font-family: inherit;
+        font-size: inherit;
+        height: 2.14285714em;
+        line-height: 1.4285714285714;
+        padding: 4px 5px;
+        margin: 0;
+        width: 100%;
+      }
+
+      input:focus {
+        border-color: #4C669F;
+        outline: 0;
+      }
+
+      .button-container {
+        box-sizing: border-box;
+        clear: both;
+        margin: 1px 0 0;
+        padding: 4px 0;
+        position: relative;
+        width: 100%;
+      }
+
+      button[type=submit] {
+        box-sizing: border-box;
+        background: #f5f5f5;
+        border: 1px solid #bdbdbd;
+        border-radius: 2px;
+        color: #434343;
+        cursor: pointer;
+        display: inline-block;
+        font-family: inherit;
+        font-size: 14px;
+        font-variant: normal;
+        font-weight: 400;
+        height: 2.14285714em;
+        line-height: 1.42857143;
+        margin: 0;
+        padding: 4px 10px;
+        text-decoration: none;
+        vertical-align: baseline;
+        white-space: nowrap;
+      }
+    </style>
+    <title>ConfigManager</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1 style="text-align: center;">Settings</h1>
+      <form method="post" action="/settings">
+        <div class="field-group">
+          <label>Name</label>
+          <input name="name" type="text" size="32">
+        </div>
+        <div class="field-group">
+          <label>MQTT Host</label>
+          <input name="mqtt_host" type="text" size="64">
+        </div>
+        <div class="field-group">
+          <label>MQTT Port</label>
+          <input name="mqtt_port" type="text" size="64">
+        </div>
+        <div class="field-group">
+          <label>MQTT Username</label>
+          <input name="mqtt_username" type="text" size="64">
+        </div>
+        <div class="field-group">
+          <label>MQTT Password</label>
+          <input name="mqtt_password" type="password" size="64">
+        </div>
+        <div class="field-group">
+          <label>MQTT Topic</label>
+          <input name="mqtt_topic" type="text" size="64">
+        </div>
+        <div class="button-container">
+          <button type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+    <script>
+      $.ajax({
+             url: '/settings',
+             success: function(data) {
+               $.each(data, function(key, value, data) {
+                 var input = "input:text[name='" + key + "']";
+
+                 $(input).val(value)
+               });
+             }
+      });
+
+      $.fn.serializeObject = function() {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function() {
+          if (o[this.name]) {
+            if (!o[this.name].push) {
+              o[this.name] = [o[this.name]];
+            }
+            o[this.name].push(this.value || '');
+          } else {
+            o[this.name] = this.value || '';
+          }
+        });
+        return o;
+      };
+
+      var validationSettings = {
+        rules: {
+          name: {
+            required: true
+          },
+          mqtt_host: {
+            required: true
+          },
+          mqtt_port: {
+            required: true
+          },
+          mqtt_username: {
+            required: true
+          },
+          mqtt_password: {
+            required: true
+          },
+          mqtt_topic: {
+            required: true
+          }
+        }
+      };
+      $('form').validate(validationSettings);
+
+      $('form').on('submit', function(e) {
+        if($(this).valid()) {
+          e.preventDefault();
+
+          var formData = $(this).serializeObject();
+
+          // Send data as a PUT request
+          $.ajax({
+                 url: '/settings',
+                 type: 'PUT',
+                 data: JSON.stringify(formData),
+                 contentType: 'application/json',
+                 success: function(data) {
+                   console.log(formData);
+                 }
+          });
+
+          return false;
+        }
+      });
+    </script>
+  </body>
+</html>
