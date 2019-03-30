@@ -10,7 +10,7 @@ and REST variable configuration.
 
 # Requires
 
-* [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
+* [ArduinoJson](https://github.com/bblanchon/ArduinoJson) version 5
 
 # Quick Start
 
