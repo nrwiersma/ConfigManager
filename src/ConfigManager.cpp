@@ -290,7 +290,7 @@ void ConfigManager::setup() {
             Serial.println(WiFi.localIP());
 
             WiFi.mode(WIFI_STA);
-            //startApi();
+            startApi();
             return;
         }
     } else {
