@@ -183,6 +183,7 @@ private:
     void handleAPGet();
     void handleAPPost();
     void handleRESTGet();
+    void handleListGet();
     void handleRESTPut();
     void handleNotFound();
 

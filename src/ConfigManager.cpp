@@ -48,13 +48,38 @@ void ConfigManager::loop() {
         ESP.restart();
     }
 
-    if (dnsServer) {
-        dnsServer->processNextRequest();
-    }
+    // Disable captative portal
+    // if (dnsServer) {
+    //     dnsServer->processNextRequest();
+    // }
 
     if (server) {
         server->handleClient();
     }
+
+    // Serial.println("scan start");
+
+    // // WiFi.scanNetworks will return the number of networks found
+    // int n = WiFi.scanNetworks();
+    // Serial.println("scan done");
+    // if (n == 0) {
+    //     Serial.println("no networks found");
+    // } else {
+    //     Serial.print(n);
+    //     Serial.println(" networks found");
+    //     for (int i = 0; i < n; ++i) {
+    //         Serial.print(WiFi.SSID(i));
+    //         Serial.print(" - ");
+    //         Serial.print(WiFi.RSSI(i));
+    //         Serial.print(" - ");
+    //         Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : "*");
+    //     delay(10);
+    //     }
+    // }
+    // Serial.println("");
+
+    // // Wait a bit before scanning again
+    // delay(5000);
 }
 
 void ConfigManager::save() {
@@ -148,6 +173,47 @@ void ConfigManager::handleRESTGet() {
     server->send(200, FPSTR(mimeJSON), body);
 }
 
+void ConfigManager::handleListGet() {
+    DynamicJsonBuffer jsonBuffer;
+    JsonArray& jsonArray = jsonBuffer.createArray();
+
+    // std::list<BaseParameter*>::iterator it;
+    // for (it = parameters.begin(); it != parameters.end(); ++it) {
+    //     if ((*it)->getMode() == set) {
+    //         continue;
+    //     }
+
+    //     (*it)->toJson(&obj);
+    // }
+
+    // WiFi.scanNetworks will return the number of networks found
+    int n = WiFi.scanNetworks();
+    Serial.println("scan done");
+    if (n == 0) {
+        Serial.println("no networks found");
+    } else {
+        Serial.print(n);
+        Serial.println(" networks found");
+
+        for (int i = 0; i < n; ++i) {
+            DynamicJsonBuffer jsonBufferItem;
+            JsonObject& obj = jsonBuffer.createObject();
+            String ssid = WiFi.SSID(i);
+            int rssi = WiFi.RSSI(i);
+            obj.set("ssid", ssid);
+            obj.set("length", rssi);
+            obj.set("security", WiFi.encryptionType(i) == ENC_TYPE_NONE ? "none" : "*");
+            jsonArray.add(obj);
+            delay(10);
+        }
+    }
+
+    String body;
+    jsonArray.printTo(body);
+
+    server->send(200, FPSTR(mimeJSON), body);
+}
+
 void ConfigManager::handleRESTPut() {
     JsonObject& obj = this->decodeJson(server->arg("plain"));
     if (!obj.success()) {
@@ -224,7 +290,7 @@ void ConfigManager::setup() {
             Serial.println(WiFi.localIP());
 
             WiFi.mode(WIFI_STA);
-            startApi();
+            //startApi();
             return;
         }
     } else {
@@ -264,6 +330,7 @@ void ConfigManager::startAP() {
     server->collectHeaders(headerKeys, headerKeysSize);
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
+    server->on("/list", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleListGet, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 
     if (apCallback) {
@@ -286,6 +353,7 @@ void ConfigManager::startApi() {
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->on("/settings", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));
+    server->on("/list", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleListGet, this));
     server->on("/settings", HTTPMethod::HTTP_PUT, std::bind(&ConfigManager::handleRESTPut, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 
