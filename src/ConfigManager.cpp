@@ -178,16 +178,6 @@ void ConfigManager::handleListGet() {
     DynamicJsonBuffer jsonBuffer;
     JsonArray& jsonArray = jsonBuffer.createArray();
 
-    // std::list<BaseParameter*>::iterator it;
-    // for (it = parameters.begin(); it != parameters.end(); ++it) {
-    //     if ((*it)->getMode() == set) {
-    //         continue;
-    //     }
-
-    //     (*it)->toJson(&obj);
-    // }
-
-    // WiFi.scanNetworks will return the number of networks found
     int n = WiFi.scanNetworks();
     Serial.println("scan done");
     if (n == 0) {
