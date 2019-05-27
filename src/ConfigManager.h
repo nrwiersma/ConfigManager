@@ -129,6 +129,7 @@ public:
     void setWifiConnectInterval(const int interval);
     void setAPCallback(std::function<void(WebServer*)> callback);
     void setAPICallback(std::function<void(WebServer*)> callback);
+    void reset();
     void loop();
 
     template<typename T>

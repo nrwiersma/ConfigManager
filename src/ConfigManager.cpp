@@ -149,8 +149,9 @@ void ConfigManager::handleAPPost() {
     EEPROM.put(WIFI_OFFSET + 32, passwordChar);
     EEPROM.commit();
 
-    server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
+    server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot in 3 seconds."));
 
+    delay(3000);
     ESP.restart();
 }
 
@@ -299,6 +300,29 @@ void ConfigManager::setup() {
     }
 
     startAP();
+}
+
+void ConfigManager::reset() {
+    // char magic[2];
+    // char ssid[32];
+    // char password[64];
+
+    // Serial.println(F("Reseting..."));
+
+    // for (int i = 0; i < ssid.length; i++) {
+    //     ssid[i] = 0;
+    // }
+    
+    // for (int i = 0; i < password.length; i++) {
+    //     password[i] = 0;
+    // }
+
+    EEPROM.put(0, 0);
+    // EEPROM.put(WIFI_OFFSET, ssidChar);
+    // EEPROM.put(WIFI_OFFSET + 32, passwordChar);
+    // EEPROM.commit();
+
+    setup();
 }
 
 void ConfigManager::startAP() {
