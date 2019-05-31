@@ -25,6 +25,16 @@
     using WebServer = ESP8266WebServer;
 #endif
 
+#define DEBUG_MODE false
+
+#if (DEBUG_MODE)
+    #define DebugPrintln(a) (Serial.println(a))
+    #define DebugPrint(a) (Serial.print(a))
+#else
+    #define DebugPrintln(a)
+    #define DebugPrint(a)
+#endif
+
 enum Mode {ap, api};
 
 enum ParameterMode { get, set, both};
@@ -162,6 +172,7 @@ private:
     Mode mode;
     void *config;
     size_t configSize;
+    bool debug;
 
     char *apName = (char *)"Thing";
     char *apPassword = NULL;
