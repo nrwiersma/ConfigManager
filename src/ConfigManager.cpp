@@ -11,6 +11,23 @@ Mode ConfigManager::getMode() {
     return this->mode;
 }
 
+void ConfigManager::sendCORS() {
+    // Create CORS
+    server->sendHeader("Access-Control-Request-Method", "GET, POST, PUT, OPTIONS, DELETE");
+    server->sendHeader("Access-Control-Request-Headers", "authorization, X-PINGOTHER, Content-Type");
+    server->sendHeader("Access-Control-Allow-Origin", "*");
+    server->sendHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS, DELETE");
+    server->sendHeader("Access-Control-Allow-Headers", "authorization, X-PINGOTHER, Content-Type");
+}
+
+void ConfigManager::handleOptions() {
+    // Set CORS headers
+    this->sendCORS();
+
+    // Send response
+    server->send(200);
+}
+
 void ConfigManager::setAPName(const char *name) {
     this->apName = (char *)name;
 }
@@ -145,6 +162,8 @@ void ConfigManager::handleRESTGet() {
     String body;
     obj.printTo(body);
 
+    this->sendCORS();
+
     server->send(200, FPSTR(mimeJSON), body);
 }
 
@@ -166,6 +185,8 @@ void ConfigManager::handleRESTPut() {
 
     writeConfig();
 
+    this->sendCORS();
+
     server->send(204, FPSTR(mimeJSON), "");
 }
 
@@ -176,6 +197,8 @@ void ConfigManager::handleNotFound() {
         server->client().stop();
         return;
     }
+
+    this->sendCORS();
 
     server->send(404, FPSTR(mimePlain), "");
     server->client().stop();
@@ -264,6 +287,7 @@ void ConfigManager::startAP() {
     server->collectHeaders(headerKeys, headerKeysSize);
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
+    server->on("/", HTTPMethod::HTTP_OPTIONS, std::bind(&ConfigManager::handleOptions, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 
     if (apCallback) {
@@ -285,8 +309,11 @@ void ConfigManager::startApi() {
     server->collectHeaders(headerKeys, headerKeysSize);
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
+    server->on("/", HTTPMethod::HTTP_OPTIONS, std::bind(&ConfigManager::handleOptions, this));
     server->on("/settings", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));
     server->on("/settings", HTTPMethod::HTTP_PUT, std::bind(&ConfigManager::handleRESTPut, this));
+    server->on("/settings", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleRESTPut, this));
+    server->on("/settings", HTTPMethod::HTTP_OPTIONS, std::bind(&ConfigManager::handleOptions, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 
     if (apiCallback) {
