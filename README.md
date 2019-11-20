@@ -109,13 +109,13 @@ void setAPTimeout(const int timeout)
 ```
 void setAPCallback(std::function<void(WebServer*)> callback)
 ```
-> Sets a callback allowing customized http endpoints to be set when the access point is setup.
+> Sets a function that will be called when the WebServer is started in AP mode allowing custom HTTP endpoints to be created.
 
 ### setAPICallback
 ```
 void setAPICallback(std::function<void(WebServer*)> callback)
 ```
-> Sets a callback allowing customized http endpoints to be set when the api is setup.
+> Sets a function that will be called when the WebServer is started in API/Settings mode allowing custom HTTP endpoints to be created.
 
 ### setWifiConnectRetries
 ```
