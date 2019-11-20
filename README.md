@@ -115,7 +115,7 @@ void setAPCallback(std::function<void(WebServer*)> callback)
 ```
 void setAPICallback(std::function<void(WebServer*)> callback)
 ```
-> Create a custom http endpoint when the device is running in API/Settings mode.
+> Sets a function that will be called when the WebServer is started in API/Settings mode allowing custom HTTP endpoints to be created.
 
 ### setWifiConnectRetries
 ```
