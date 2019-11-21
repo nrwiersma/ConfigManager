@@ -25,6 +25,11 @@
     using WebServer = ESP8266WebServer;
 #endif
 
+extern bool DEBUG_MODE;
+
+#define DebugPrintln(a) (DEBUG_MODE ? Serial.println(a) : false)
+#define DebugPrint(a) (DEBUG_MODE ? Serial.print(a) : false)
+
 enum Mode {ap, api};
 
 enum ParameterMode { get, set, both};

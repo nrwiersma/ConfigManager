@@ -7,6 +7,8 @@ const char mimeHTML[] PROGMEM = "text/html";
 const char mimeJSON[] PROGMEM = "application/json";
 const char mimePlain[] PROGMEM = "text/plain";
 
+bool DEBUG_MODE = false;
+
 Mode ConfigManager::getMode() {
     return this->mode;
 }
@@ -83,7 +85,7 @@ void ConfigManager::handleAPGet() {
 
     File f = SPIFFS.open(apFilename, "r");
     if (!f) {
-        Serial.println(F("file open failed"));
+        DebugPrintln(F("file open failed"));
         server->send(404, FPSTR(mimeHTML), F("File not found"));
         return;
     }
@@ -182,23 +184,23 @@ void ConfigManager::handleNotFound() {
 }
 
 bool ConfigManager::wifiConnected() {
-    Serial.print(F("Waiting for WiFi to connect"));
+    DebugPrint(F("Waiting for WiFi to connect"));
 
     int i = 0;
     while (i < wifiConnectRetries) {
         if (WiFi.status() == WL_CONNECTED) {
-            Serial.println("");
+            DebugPrintln("");
             return true;
         }
 
-        Serial.print(".");
+        DebugPrint(".");
 
         delay(wifiConnectInterval);
         i++;
     }
 
-    Serial.println("");
-    Serial.println(F("Connection timed out"));
+    DebugPrintln("");
+    DebugPrintln(F("Connection timed out"));
 
     return false;
 }
@@ -208,7 +210,7 @@ void ConfigManager::setup() {
     char ssid[32];
     char password[64];
 
-    Serial.println(F("Reading saved configuration"));
+    DebugPrintln(F("Reading saved configuration"));
 
     EEPROM.get(0, magic);
     EEPROM.get(WIFI_OFFSET, ssid);
@@ -218,10 +220,10 @@ void ConfigManager::setup() {
     if (memcmp(magic, magicBytes, 2) == 0) {
         WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
         if (wifiConnected()) {
-            Serial.print(F("Connected to "));
-            Serial.print(ssid);
-            Serial.print(F(" with "));
-            Serial.println(WiFi.localIP());
+            DebugPrint(F("Connected to "));
+            DebugPrint(ssid);
+            DebugPrint(F(" with "));
+            DebugPrintln(WiFi.localIP());
 
             WiFi.mode(WIFI_STA);
             startApi();
@@ -241,7 +243,7 @@ void ConfigManager::startAP() {
 
     mode = ap;
 
-    Serial.println(F("Starting Access Point"));
+    DebugPrintln(F("Starting Access Point"));
 
     WiFi.mode(WIFI_AP);
     WiFi.softAP(apName, apPassword);
@@ -253,8 +255,8 @@ void ConfigManager::startAP() {
     WiFi.softAPConfig(ip, ip, NMask);
 	
     IPAddress myIP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(myIP);
+    DebugPrint("AP IP address: ");
+    DebugPrintln(myIP);
 
     dnsServer.reset(new DNSServer);
     dnsServer->setErrorReplyCode(DNSReplyCode::NoError);

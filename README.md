@@ -70,6 +70,20 @@ on the most common IDEs:
 
 # Documentation
 
+## Debugging
+
+### Enabling
+
+By default, ConfigManager runs in `DEBUG_MODE` off. This is to allow the serial iterface to communicate as needed. To turn on debugging, add the following line inside your `setup` routine:
+
+```
+DEBUG_MODE = true
+```
+
+### Using
+
+To use the debugger, change your `Serial.print` calls to `DebugPrint`. Output will then be toggled via the debugger.
+
 ## Methods
 
 ### getMode
