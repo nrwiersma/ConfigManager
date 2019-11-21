@@ -131,6 +131,48 @@ void ConfigManager::handleAPPost() {
     ESP.restart();
 }
 
+void ConfigManager::handleScanGet() {
+    DynamicJsonBuffer jsonBuffer;
+    JsonArray& jsonArray = jsonBuffer.createArray();
+
+    DebugPrintln("scanning WIFI networks...");
+    int n = WiFi.scanNetworks();
+    DebugPrintln("scan complete");
+    if (n == 0) {
+        DebugPrintln("no networks found");
+    } else {
+        DebugPrint(n);
+        DebugPrintln(" networks found:");
+
+        for (int i = 0; i < n; ++i) {
+            String ssid = WiFi.SSID(i);
+            int rssi = WiFi.RSSI(i);
+            String security = WiFi.encryptionType(i) == ENC_TYPE_NONE ? "none" : "enabled";
+
+            DebugPrint("Name: ");
+            DebugPrint(ssid);
+            DebugPrint(" - Strength: ");
+            DebugPrint(rssi);
+            DebugPrint("- Security: ");
+            DebugPrintln(security);
+
+            DynamicJsonBuffer jsonBufferItem;
+            JsonObject& obj = jsonBuffer.createObject();
+            obj.set("ssid", ssid);
+            obj.set("strength", rssi);
+            obj.set("security", security);
+            jsonArray.add(obj);
+
+            delay(10);
+        }
+    }
+
+    String body;
+    jsonArray.printTo(body);
+
+    server->send(200, FPSTR(mimeJSON), body);
+}
+
 void ConfigManager::handleRESTGet() {
     DynamicJsonBuffer jsonBuffer;
     JsonObject& obj = jsonBuffer.createObject();
@@ -238,9 +280,6 @@ void ConfigManager::setup() {
 }
 
 void ConfigManager::startAP() {
-    const char* headerKeys[] = {"Content-Type"};
-    size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
-
     mode = ap;
 
     DebugPrintln(F("Starting Access Point"));
@@ -262,11 +301,7 @@ void ConfigManager::startAP() {
     dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
     dnsServer->start(DNS_PORT, "*", ip);
 
-    server.reset(new WebServer(80));
-    server->collectHeaders(headerKeys, headerKeysSize);
-    server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
-    server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
-    server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
+    baseRoutingSetup();
 
     if (apCallback) {
         apCallback(server.get());
@@ -278,24 +313,30 @@ void ConfigManager::startAP() {
 }
 
 void ConfigManager::startApi() {
-    const char* headerKeys[] = {"Content-Type"};
-    size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
-
     mode = api;
 
-    server.reset(new WebServer(80));
-    server->collectHeaders(headerKeys, headerKeysSize);
-    server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
-    server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
+    baseRoutingSetup();
     server->on("/settings", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleRESTGet, this));
     server->on("/settings", HTTPMethod::HTTP_PUT, std::bind(&ConfigManager::handleRESTPut, this));
-    server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 
     if (apiCallback) {
         apiCallback(server.get());
     }
 
     server->begin();
+}
+
+void ConfigManager::baseRoutingSetup() {
+    const char* headerKeys[] = {"Content-Type"};
+    size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
+
+    server.reset(new WebServer(80));
+    server->collectHeaders(headerKeys, headerKeysSize);
+
+    server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
+    server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
+    server->on("/scan", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleScanGet, this));
+    server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 }
 
 void ConfigManager::readConfig() {

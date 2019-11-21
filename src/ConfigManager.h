@@ -187,6 +187,7 @@ private:
 
     void handleAPGet();
     void handleAPPost();
+    void handleScanGet();
     void handleRESTGet();
     void handleRESTPut();
     void handleNotFound();
@@ -195,6 +196,7 @@ private:
     void setup();
     void startAP();
     void startApi();
+    void baseRoutingSetup();
 
     void readConfig();
     void writeConfig();
