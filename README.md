@@ -187,6 +187,17 @@ void loop()
 ```
 > Handles any waiting REST requests.
 
+### streamFile(const char &ast;file, const char mime[])
+
+```
+server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
+    configManager.streamFile(settingsHTML, mimeHTML);
+});
+```
+
+> Stream a file to the server when using custom routing endpoints. See `example/save_config_demo.ino`
+
+
 # Endpoints
 
 ### GET /

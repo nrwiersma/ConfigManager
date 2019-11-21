@@ -1,6 +1,5 @@
 #include "ConfigManager.h"
 
-const char mimeHTML[] PROGMEM = "text/html";
 const char *configHTMLFile = "/settings.html";
 
 struct Config {
@@ -22,18 +21,7 @@ ConfigManager configManager;
 
 void createCustomRoute(WebServer *server) {
   server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
-    SPIFFS.begin();
-
-    File f = SPIFFS.open(configHTMLFile, "r");
-    if (!f) {
-      Serial.println(F("file open failed"));
-      server->send(404, FPSTR(mimeHTML), F("File not found"));
-      return;
-    }
-
-    server->streamFile(f, FPSTR(mimeHTML));
-
-    f.close();
+    configManager.streamFile(settingsHTML, mimeHTML);
   });
 }
 
