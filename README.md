@@ -109,7 +109,8 @@ on the most common IDEs:
 
 ### Enabling
 
-By default, ConfigManager runs in `DEBUG_MODE` off. This is to allow the serial iterface to communicate as needed. To turn on debugging, add the following line inside your `setup` routine:
+By default, ConfigManager runs in `DEBUG_MODE` off. This is to allow the serial iterface to communicate as needed. 
+To turn on debugging, add the following line inside your `setup` routine:
 
 ```
 DEBUG_MODE = true
@@ -201,6 +202,16 @@ void addParameter(const char *name, char *variable, size_t size, ParameterMode m
 ```
 > Adds a character array parameter to the REST interface.The optional mode can be set to ```set```
 > or ```get``` to make the parameter read or write only (defaults to ```both```).
+
+### clearWifiSettings(bool reboot)
+
+> Sets SSID/Password to `NULL`
+> The `bool reboot` indicates if the device should restart after clearing the values.
+
+### clearSettings(bool reboot)
+
+> Sets all settings to `NULL`. This is useful to initialize the memory of the device.
+> The `bool reboot` indicates if the device should restart after clearing the values.
 
 ### begin
 ```
