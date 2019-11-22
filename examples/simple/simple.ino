@@ -20,6 +20,7 @@ void createCustomRoute(WebServer *server) {
 }
 
 void setup() {
+    DEBUG_MODE = true; // will log to serial monitor
     Serial.begin(115200);
     Serial.println("");
 
