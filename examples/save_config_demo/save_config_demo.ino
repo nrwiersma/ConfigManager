@@ -21,7 +21,7 @@ ConfigManager configManager;
 
 void createCustomRoute(WebServer *server) {
   server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
-    configManager.streamFile(settingsHTML, mimeHTML);
+    configManager.streamFile(configHTMLFile, mimeHTML);
   });
 }
 
