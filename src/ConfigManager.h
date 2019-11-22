@@ -194,6 +194,7 @@ private:
 
     void handleAPGet();
     void handleAPPost();
+    void handleScanGet();
     void handleRESTGet();
     void handleRESTPut();
 
@@ -201,6 +202,7 @@ private:
     void setup();
     void startAP();
     void startApi();
+    void createBaseWebServer();
 
     void readConfig();
     void writeConfig();

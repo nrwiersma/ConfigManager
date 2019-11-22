@@ -200,13 +200,18 @@ server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
 
 # Endpoints
 
-### GET /
+
+## GET /
+
+###### *(AP,API)*
 
 > Gets the HTML page that is used to set the Wifi SSID and password.
 
 + Response 200 *(text/html)*
 
-### POST /
+## POST /
+
+###### *(AP,API)*
 
 > Sets the Wifi SSID and password. The form example can be found in the ```data``` directory.
 
@@ -225,7 +230,25 @@ ssid=access point&password=some password
 }
 ```
 
-### GET /settings
+## GET /scan
+
+###### *(AP,API)*
+
+> Scans visible networks
+
++ Response 200 *(application/json)*
+
+```json
+{
+  "ssid": "access point name",
+  "strength": *int*, 
+  "security": "none" *or* "enabled"
+}
+```
+
+## GET /settings
+
+###### *(API)*
 
 > Gets the settings set in ```addParameter```.
 
@@ -238,7 +261,9 @@ ssid=access point&password=some password
 }
 ```
 
-### PUT /settings
+## PUT /settings
+
+###### *(API)*
 
 > Sets the settings set in ```addParameter```.
 
