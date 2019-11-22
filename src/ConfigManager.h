@@ -30,8 +30,13 @@ extern bool DEBUG_MODE;
 #define DebugPrintln(a) (DEBUG_MODE ? Serial.println(a) : false)
 #define DebugPrint(a) (DEBUG_MODE ? Serial.print(a) : false)
 
-enum Mode {ap, api};
+extern const char mimeHTML[];
+extern const char mimeJSON[];
+extern const char mimePlain[];
+extern const char mimeCSS[];
+extern const char mimeJS[];
 
+enum Mode {ap, api};
 enum ParameterMode { get, set, both};
 
 /**
@@ -135,6 +140,8 @@ public:
     void setAPCallback(std::function<void(WebServer*)> callback);
     void setAPICallback(std::function<void(WebServer*)> callback);
     void loop();
+    void streamFile(const char *file, const char mime[]);
+    void handleNotFound();
 
     template<typename T>
     void begin(T &config) {
@@ -189,7 +196,6 @@ private:
     void handleAPPost();
     void handleRESTGet();
     void handleRESTPut();
-    void handleNotFound();
 
     bool wifiConnected();
     void setup();

@@ -6,6 +6,8 @@ const char magicBytes[2] = {'C', 'M'};
 const char mimeHTML[] PROGMEM = "text/html";
 const char mimeJSON[] PROGMEM = "application/json";
 const char mimePlain[] PROGMEM = "text/plain";
+const char mimeCSS[] PROGMEM = "text/css";
+const char mimeJS[] PROGMEM = "application/javascript";
 
 bool DEBUG_MODE = false;
 
@@ -80,19 +82,22 @@ JsonObject &ConfigManager::decodeJson(String jsonString)
     return obj;
 }
 
-void ConfigManager::handleAPGet() {
+void ConfigManager::streamFile(const char *file, const char mime[]) {
     SPIFFS.begin();
 
-    File f = SPIFFS.open(apFilename, "r");
+    File f = SPIFFS.open(file, "r");
     if (!f) {
         DebugPrintln(F("file open failed"));
-        server->send(404, FPSTR(mimeHTML), F("File not found"));
+        handleNotFound();
         return;
     }
 
-    server->streamFile(f, FPSTR(mimeHTML));
-
+    server->streamFile(f, FPSTR(mime));
     f.close();
+}
+
+void ConfigManager::handleAPGet() {
+    streamFile(apFilename, mimeHTML);
 }
 
 void ConfigManager::handleAPPost() {
@@ -174,13 +179,13 @@ void ConfigManager::handleRESTPut() {
 void ConfigManager::handleNotFound() {
     if (!isIp(server->hostHeader()) ) {
         server->sendHeader("Location", String("http://") + toStringIP(server->client().localIP()), true);
-        server->send(302, FPSTR(mimePlain), ""); // Empty content inhibits Content-length header so we have to close the socket ourselves.
+        server->send(302, FPSTR(mimePlain), ""); 
+        // Empty content inhibits Content-length header so we have to close the socket ourselves.
         server->client().stop();
         return;
     }
 
-    server->send(404, FPSTR(mimePlain), "");
-    server->client().stop();
+    server->send(404, FPSTR(mimePlain), "File Not Found");
 }
 
 bool ConfigManager::wifiConnected() {
