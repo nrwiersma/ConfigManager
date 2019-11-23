@@ -27,6 +27,24 @@ Include the library in your sketch
 #include <ConfigManager.h>
 ```
 
+Create your `config` and `meta` structs. These are the definitions for your settings.
+
+```cpp
+struct Config {
+    char name[20];
+    bool enabled;
+    int8_t hour;
+    char password[20];
+} config;
+
+struct Metadata {
+    int8_t version;
+} meta;
+
+```
+
+> Note: These are examples of possible settings. The `config` is required, these values are arbitrary.
+
 Initialize a global instance of the library
 
 ```cpp
@@ -51,6 +69,23 @@ In your loop function, run the manager loop
 ```cpp
 configManager.loop();
 ```
+
+To access your config data through device code
+
+```cpp
+char name[8] = config.name;
+int version = meta.version;
+```
+
+To change a value through device code
+
+```cpp
+config.name = "New Name";
+meta.version = 8;
+configManager.save();
+```
+
+### Additional files saved
 
 Upload the ```index.html``` file found in the ```data``` directory into the SPIFFS.
 Instructions on how to do this vary based on your IDE. Below are links instructions
@@ -191,7 +226,7 @@ void loop()
 
 ```
 server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
-    configManager.streamFile(settingsHTML, mimeHTML);
+    configManager.streamFile(configHTMLFile, mimeHTML);
 });
 ```
 
@@ -203,7 +238,7 @@ server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
 
 ## GET /
 
-###### *(AP,API)*
+###### Modes: *AP and API*
 
 > Gets the HTML page that is used to set the Wifi SSID and password.
 
@@ -211,7 +246,7 @@ server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
 
 ## POST /
 
-###### *(AP,API)*
+###### Modes: *AP and API*
 
 > Sets the Wifi SSID and password. The form example can be found in the ```data``` directory.
 
@@ -232,9 +267,11 @@ ssid=access point&password=some password
 
 ## GET /scan
 
-###### *(AP,API)*
+###### Modes: *AP and API*
 
 > Scans visible networks
+
++ Will print to Serial Monitor is `DEBUG_MODE = true`
 
 + Response 200 *(application/json)*
 
@@ -242,13 +279,13 @@ ssid=access point&password=some password
 {
   "ssid": "access point name",
   "strength": *int*, 
-  "security": "none" *or* "enabled"
+  "security": *bool*
 }
 ```
 
 ## GET /settings
 
-###### *(API)*
+###### Modes: *API*
 
 > Gets the settings set in ```addParameter```.
 
@@ -263,7 +300,7 @@ ssid=access point&password=some password
 
 ## PUT /settings
 
-###### *(API)*
+###### Modes: *API*
 
 > Sets the settings set in ```addParameter```.
 
