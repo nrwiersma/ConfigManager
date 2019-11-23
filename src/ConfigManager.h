@@ -58,10 +58,9 @@ public:
 template<typename T>
 class ConfigParameter : public BaseParameter {
 public:
-    ConfigParameter(const char *name, T *ptr, ParameterMode mode = both, std::function<void(const char*)> cb = NULL) {
+    ConfigParameter(const char *name, T *ptr, ParameterMode mode = both) {
         this->name = name;
         this->ptr = ptr;
-        this->cb = cb;
         this->mode = mode;
     }
 
@@ -77,10 +76,6 @@ public:
 
     void toJson(JsonObject *json) {
         json->set(name, *ptr);
-
-        if (cb) {
-            cb(name);
-        }
     }
 
     void clearData() {
