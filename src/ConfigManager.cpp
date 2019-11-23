@@ -1,7 +1,8 @@
 #include "ConfigManager.h"
 
 const byte DNS_PORT = 53;
-const char magicBytes[2] = {'C', 'M'};
+const char magicBytes[MAGIC_LENGTH] = {'C', 'M'};
+const char magicBytesEmpty[MAGIC_LENGTH] = {NULL, NULL};
 
 const char mimeHTML[] PROGMEM = "text/html";
 const char mimeJSON[] PROGMEM = "application/json";
@@ -104,8 +105,6 @@ void ConfigManager::handleAPPost() {
     bool isJson = server->header("Content-Type") == FPSTR(mimeJSON);
     String ssid;
     String password;
-    char ssidChar[32];
-    char passwordChar[64];
 
     if (isJson) {
         JsonObject& obj = this->decodeJson(server->arg("plain"));
@@ -118,21 +117,14 @@ void ConfigManager::handleAPPost() {
     }
 
     if (ssid.length() == 0) {
-        server->send(400, FPSTR(mimePlain), F("Invalid ssid or password."));
+        server->send(400, FPSTR(mimePlain), F("Invalid ssid."));
         return;
     }
 
-    strncpy(ssidChar, ssid.c_str(), sizeof(ssidChar));
-    strncpy(passwordChar, password.c_str(), sizeof(passwordChar));
-
-
-    EEPROM.put(0, magicBytes);
-    EEPROM.put(WIFI_OFFSET, ssidChar);
-    EEPROM.put(WIFI_OFFSET + 32, passwordChar);
-    EEPROM.commit();
+    storeWifiSettings(ssid, password, false);
 
     server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
-
+    
     ESP.restart();
 }
 
@@ -251,18 +243,18 @@ bool ConfigManager::wifiConnected() {
 }
 
 void ConfigManager::setup() {
-    char magic[2];
-    char ssid[32];
-    char password[64];
+    char magic[MAGIC_LENGTH];
+    char ssid[SSID_LENGTH];
+    char password[PASSWORD_LENGTH];
 
     DebugPrintln(F("Reading saved configuration"));
 
     EEPROM.get(0, magic);
-    EEPROM.get(WIFI_OFFSET, ssid);
-    EEPROM.get(WIFI_OFFSET + 32, password);
+    EEPROM.get(MAGIC_LENGTH, ssid);
+    EEPROM.get(MAGIC_LENGTH + SSID_LENGTH, password);
     readConfig();
 
-    if (memcmp(magic, magicBytes, 2) == 0) {
+    if (memcmp(magic, magicBytes, MAGIC_LENGTH) == 0) {
         WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
         if (wifiConnected()) {
             DebugPrint(F("Connected to "));
@@ -276,6 +268,8 @@ void ConfigManager::setup() {
         }
     } else {
         // We are at a cold start, don't bother timeing out.
+        DebugPrint("MagicBytes mismatch - SSID: ");
+        DebugPrintln(ssid);
         apTimeout = 0;
     }
 
@@ -296,6 +290,9 @@ void ConfigManager::startAP() {
     IPAddress NMask(255, 255, 255, 0);
     WiFi.softAPConfig(ip, ip, NMask);
 	
+    DebugPrint("AP Name: ");
+    DebugPrintln(apName);
+
     IPAddress myIP = WiFi.softAPIP();
     DebugPrint("AP IP address: ");
     DebugPrintln(myIP);
@@ -340,6 +337,51 @@ void ConfigManager::createBaseWebServer() {
     server->on("/", HTTPMethod::HTTP_POST, std::bind(&ConfigManager::handleAPPost, this));
     server->on("/scan", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleScanGet, this));
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
+}
+
+
+void ConfigManager::clearWifiSettings(bool reboot) {
+    char ssid[SSID_LENGTH];
+    char password[PASSWORD_LENGTH];
+    memset(ssid, NULL, SSID_LENGTH);
+    memset(password, NULL, PASSWORD_LENGTH);
+
+    DebugPrintln('Clearing WIFI connection.');
+    storeWifiSettings(ssid, password, true);
+
+    if (reboot) {
+        ESP.restart();
+    }
+}
+
+void ConfigManager::storeWifiSettings(String ssid, String password, bool resetMagic) {
+    char ssidChar[SSID_LENGTH];
+    char passwordChar[PASSWORD_LENGTH];
+
+    strncpy(ssidChar, ssid.c_str(), SSID_LENGTH);
+    strncpy(passwordChar, password.c_str(), PASSWORD_LENGTH);
+
+    DebugPrint("Storing WIFI: ");
+    DebugPrintln(ssid);
+
+    EEPROM.put(0, resetMagic ? magicBytesEmpty : magicBytes);
+    EEPROM.put(MAGIC_LENGTH, ssidChar);
+    EEPROM.put(MAGIC_LENGTH + SSID_LENGTH, passwordChar);
+    EEPROM.commit();
+}
+
+void ConfigManager::clearSettings(bool reboot) {
+    DebugPrintln("Clearing Settings....");
+    std::list<BaseParameter*>::iterator it;
+    for (it = parameters.begin(); it != parameters.end(); ++it) {
+        (*it)->clearData();
+    }
+
+    writeConfig();
+
+    if (reboot) {
+        ESP.restart();
+    }
 }
 
 void ConfigManager::readConfig() {
