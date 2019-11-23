@@ -73,14 +73,14 @@ configManager.loop();
 To access your config data through device code
 
 ```cpp
-char name[8] = config.name;
+char* name = config.name;
 int version = meta.version;
 ```
 
 To change a value through device code
 
 ```cpp
-config.name = "New Name";
+strncpy(config.name, "New Name", 8);
 meta.version = 8;
 configManager.save();
 ```
