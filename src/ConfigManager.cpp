@@ -40,6 +40,10 @@ void ConfigManager::setWifiConnectInterval(const int interval) {
     this->wifiConnectInterval = interval;
 }
 
+void ConfigManager::setWebPort(const int port) {
+    this->webPort = port;
+}
+
 void ConfigManager::setAPCallback(std::function<void(WebServer*)> callback) {
     this->apCallback = callback;
 }
@@ -209,8 +213,13 @@ void ConfigManager::handleRESTPut() {
 }
 
 void ConfigManager::handleNotFound() {
-    if (!isIp(server->hostHeader()) ) {
-        server->sendHeader("Location", String("http://") + toStringIP(server->client().localIP()), true);
+    String URI = toStringIP(server->client().localIP()) + String(":") + String(webPort);
+    String header = server->hostHeader();
+    
+    if ( !isIp(header) && header != URI) {
+        DebugPrint(F("Unknown URL: "));
+        DebugPrintln(header);
+        server->sendHeader("Location", String("http://") + URI, true);
         server->send(302, FPSTR(mimePlain), ""); 
         // Empty content inhibits Content-length header so we have to close the socket ourselves.
         server->client().stop();
@@ -248,6 +257,9 @@ void ConfigManager::setup() {
     char password[PASSWORD_LENGTH];
 
     DebugPrintln(F("Reading saved configuration"));
+
+    DebugPrint(F("MAC: "));
+    DebugPrintln(WiFi.macAddress());
 
     EEPROM.get(0, magic);
     EEPROM.get(MAGIC_LENGTH, ssid);
@@ -333,7 +345,10 @@ void ConfigManager::createBaseWebServer() {
     const char* headerKeys[] = {"Content-Type"};
     size_t headerKeysSize = sizeof(headerKeys)/sizeof(char*);
 
-    server.reset(new WebServer(80));
+    server.reset(new WebServer(this->webPort));
+    DebugPrint(F("Webserver enabled on port: "));
+    DebugPrintln(webPort);
+    
     server->collectHeaders(headerKeys, headerKeysSize);
 
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
@@ -349,7 +364,7 @@ void ConfigManager::clearWifiSettings(bool reboot) {
     memset(ssid, NULL, SSID_LENGTH);
     memset(password, NULL, PASSWORD_LENGTH);
 
-    DebugPrintln("Clearing WiFi connection.");
+    DebugPrintln(F("Clearing WiFi connection."));
     storeWifiSettings(ssid, password, true);
 
     if (reboot) {
