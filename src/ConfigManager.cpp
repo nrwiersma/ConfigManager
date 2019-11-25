@@ -132,7 +132,7 @@ void ConfigManager::handleScanGet() {
     DynamicJsonBuffer jsonBuffer;
     JsonArray& jsonArray = jsonBuffer.createArray();
 
-    DebugPrintln("scanning WIFI networks...");
+    DebugPrintln("Scanning WiFi networks...");
     int n = WiFi.scanNetworks();
     DebugPrintln("scan complete");
     if (n == 0) {
@@ -251,6 +251,9 @@ void ConfigManager::setup() {
 
     EEPROM.get(0, magic);
     EEPROM.get(MAGIC_LENGTH, ssid);
+    DebugPrint(F("SSID: \""));
+    DebugPrint(ssid);
+    DebugPrintln(F("\""));
     EEPROM.get(MAGIC_LENGTH + SSID_LENGTH, password);
     readConfig();
 
@@ -267,8 +270,8 @@ void ConfigManager::setup() {
             return;
         }
     } else {
-        // We are at a cold start, don't bother timeing out.
-        DebugPrint("MagicBytes mismatch - SSID: ");
+        // We are at a cold start, don't bother timing out.
+        DebugPrint(F("MagicBytes mismatch - SSID: "));
         DebugPrintln(ssid);
         apTimeout = 0;
     }
@@ -346,7 +349,7 @@ void ConfigManager::clearWifiSettings(bool reboot) {
     memset(ssid, NULL, SSID_LENGTH);
     memset(password, NULL, PASSWORD_LENGTH);
 
-    DebugPrintln('Clearing WIFI connection.');
+    DebugPrintln("Clearing WiFi connection.");
     storeWifiSettings(ssid, password, true);
 
     if (reboot) {
@@ -358,20 +361,29 @@ void ConfigManager::storeWifiSettings(String ssid, String password, bool resetMa
     char ssidChar[SSID_LENGTH];
     char passwordChar[PASSWORD_LENGTH];
 
+    if (EEPROM.length() == 0) {
+        DebugPrintln(F("WiFi Settings cannot be stored before ConfigManager::begin()"));
+        return;
+    }
+
     strncpy(ssidChar, ssid.c_str(), SSID_LENGTH);
     strncpy(passwordChar, password.c_str(), PASSWORD_LENGTH);
 
-    DebugPrint("Storing WIFI: ");
-    DebugPrintln(ssid);
+    DebugPrint(F("Storing WiFi Settings for SSID: \""));
+    DebugPrint(ssidChar);
+    DebugPrintln(F("\""));
 
     EEPROM.put(0, resetMagic ? magicBytesEmpty : magicBytes);
     EEPROM.put(MAGIC_LENGTH, ssidChar);
     EEPROM.put(MAGIC_LENGTH + SSID_LENGTH, passwordChar);
-    EEPROM.commit();
+    bool wroteChange = EEPROM.commit();
+
+    DebugPrint(F("EEPROM committed: "));
+    DebugPrintln(wroteChange ? F("true") : F("false"));
 }
 
 void ConfigManager::clearSettings(bool reboot) {
-    DebugPrintln("Clearing Settings....");
+    DebugPrintln(F("Clearing Settings...."));
     std::list<BaseParameter*>::iterator it;
     for (it = parameters.begin(); it != parameters.end(); ++it) {
         (*it)->clearData();
