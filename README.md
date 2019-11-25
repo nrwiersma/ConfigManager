@@ -179,6 +179,12 @@ void setWifiConnectInterval(const int interval)
 ```
 > Sets the interval (in milliseconds) between Wifi connection retries. Defaults to 500ms.
 
+### setWebPort
+```
+void setWebPort(const int port)
+```
+> Sets the port that the web server listens on. Defaults to 80.
+
 ### addParameter
 ```
 template<typename T>

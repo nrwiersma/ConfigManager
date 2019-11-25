@@ -17,8 +17,12 @@ setAPPassword	KEYWORD2
 setAPFilename	KEYWORD2
 setWifiConnectRetries	KEYWORD2
 setWifiConnectInterval	KEYWORD2
+setWebPort  KEYWORD2
+clearSettings   KEYWORD2
+clearWifiSettings   KEYWORD2
 setAPCallback	KEYWORD2
 setAPICallback	KEYWORD2
+streamFile  KEYWORD2
 addParameter	KEYWORD2
 begin	KEYWORD2
 loop	KEYWORD2

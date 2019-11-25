@@ -148,6 +148,7 @@ public:
     void setAPTimeout(const int timeout);
     void setWifiConnectRetries(const int retries);
     void setWifiConnectInterval(const int interval);
+    void setWebPort(const int port);
     void setAPCallback(std::function<void(WebServer*)> callback);
     void setAPICallback(std::function<void(WebServer*)> callback);
     void loop();
@@ -195,6 +196,8 @@ private:
 
     int wifiConnectRetries = 20;
     int wifiConnectInterval = 500;
+
+    int webPort = 80;
 
     std::unique_ptr<DNSServer> dnsServer;
     std::unique_ptr<WebServer> server;
