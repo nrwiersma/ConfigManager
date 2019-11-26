@@ -243,7 +243,7 @@ void loop()
 
 ```
 server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
-    configManager.streamFile(configHTMLFile, mimeHTML);
+    configManager.streamFile(settingsHTMLFile, mimeHTML);
 });
 ```
 
