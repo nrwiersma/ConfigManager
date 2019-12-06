@@ -18,6 +18,12 @@
 #include <list>
 #include "ArduinoJson.h"
 
+#if defined(ARDUINO_ARCH_ESP8266) //ESP8266
+    #define WIFI_OPEN  ENC_TYPE_NONE
+#elif defined(ARDUINO_ARCH_ESP32) //ESP32
+    #define WIFI_OPEN  WIFI_AUTH_OPEN
+#endif
+
 #define MAGIC_LENGTH 2
 #define SSID_LENGTH 32
 #define PASSWORD_LENGTH 64
@@ -111,7 +117,7 @@ public:
         if (json->containsKey(name) && json->is<char *>(name)) {
             const char * value = json->get<const char *>(name);
 
-            memset(ptr, NULL, length);
+            memset(ptr, 0, length);
             strncpy(ptr, const_cast<char*>(value), length - 1);
         }
     }
@@ -123,9 +129,9 @@ public:
     void clearData() {
         DebugPrint("Clearing: ");
         DebugPrintln(name);
-        memset(ptr, NULL, length);
+        memset(ptr, 0, length);
     }
-    
+
 
 private:
     const char *name;
