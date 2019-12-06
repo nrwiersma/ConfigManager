@@ -1,5 +1,6 @@
 ![Logo](http://svg.wiersma.co.za/github/project?lang=cpp&title=ConfigManager&tag=wifi%20configuration%20manager)
 
+[![Build Status](https://travis-ci.com/nrwiersma/ConfigManager.svg?branch=master)](https://travis-ci.com/nrwiersma/ConfigManager)
 [![arduino-library-badge](http://www.ardu-badge.com/badge/ConfigManager.svg)](http://www.ardu-badge.com/ConfigManager)
 
 Wifi connection and configuration manager for ESP8266 and ESP32.
@@ -109,7 +110,7 @@ on the most common IDEs:
 
 ### Enabling
 
-By default, ConfigManager runs in `DEBUG_MODE` off. This is to allow the serial iterface to communicate as needed. 
+By default, ConfigManager runs in `DEBUG_MODE` off. This is to allow the serial iterface to communicate as needed.
 To turn on debugging, add the following line inside your `setup` routine:
 
 ```
@@ -295,7 +296,7 @@ ssid=access point&password=some password
 ```json
 {
   "ssid": "access point name",
-  "strength": *int*, 
+  "strength": *int*,
   "security": *bool*
 }
 ```
