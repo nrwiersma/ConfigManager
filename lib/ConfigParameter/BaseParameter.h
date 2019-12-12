@@ -1,6 +1,7 @@
 #ifndef __BASE_PARAMETER_H__
 #define __BASE_PARAMETER_H__
 
+#include <ArduinoJson.h>
 #include <DebugPrint.h>
 
 enum Mode {ap, api};
