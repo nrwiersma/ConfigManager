@@ -1,4 +1,4 @@
-#ifndef CONFIG_STRING_PARAMETER_H__
+#ifndef __CONFIG_STRING_PARAMETER_H__
 #define __CONFIG_STRING_PARAMETER_H__
 
 #include <BaseParameter.h>
