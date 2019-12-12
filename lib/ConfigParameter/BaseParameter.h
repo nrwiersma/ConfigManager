@@ -1,6 +1,8 @@
 #ifndef __BASE_PARAMETER_H__
 #define __BASE_PARAMETER_H__
 
+#include <DebugPrint.h>
+
 enum Mode {ap, api};
 enum ParameterMode { get, set, both};
 

@@ -1,7 +1,7 @@
 #ifndef CONFIG_STRING_PARAMETER_H__
 #define __CONFIG_STRING_PARAMETER_H__
 
-#include "BaseParameter.h"
+#include <BaseParameter.h>
 
 /**
  * Config String Parameter

@@ -24,7 +24,6 @@
     #define WIFI_OPEN  WIFI_AUTH_OPEN
 #endif
 
-#include "DebugPrint.h"
 #include "ConfigParameter.h"
 #include "ConfigStringParameter.h"
 
