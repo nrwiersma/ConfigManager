@@ -2,7 +2,7 @@
 
 const byte DNS_PORT = 53;
 const char magicBytes[MAGIC_LENGTH] = {'C', 'M'};
-const char magicBytesEmpty[MAGIC_LENGTH] = {NULL, NULL};
+const char magicBytesEmpty[MAGIC_LENGTH] = {'\0', '\0'};
 
 const char mimeHTML[] PROGMEM = "text/html";
 const char mimeJSON[] PROGMEM = "application/json";
@@ -128,7 +128,7 @@ void ConfigManager::handleAPPost() {
     storeWifiSettings(ssid, password, false);
 
     server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
-    
+
     ESP.restart();
 }
 
@@ -148,7 +148,7 @@ void ConfigManager::handleScanGet() {
         for (int i = 0; i < n; ++i) {
             String ssid = WiFi.SSID(i);
             int rssi = WiFi.RSSI(i);
-            String security = WiFi.encryptionType(i) == ENC_TYPE_NONE ? "none" : "enabled";
+            String security = WiFi.encryptionType(i) == WIFI_OPEN ? "none" : "enabled";
 
             DebugPrint("Name: ");
             DebugPrint(ssid);
@@ -215,12 +215,12 @@ void ConfigManager::handleRESTPut() {
 void ConfigManager::handleNotFound() {
     String URI = toStringIP(server->client().localIP()) + String(":") + String(webPort);
     String header = server->hostHeader();
-    
+
     if ( !isIp(header) && header != URI) {
         DebugPrint(F("Unknown URL: "));
         DebugPrintln(header);
         server->sendHeader("Location", String("http://") + URI, true);
-        server->send(302, FPSTR(mimePlain), ""); 
+        server->send(302, FPSTR(mimePlain), "");
         // Empty content inhibits Content-length header so we have to close the socket ourselves.
         server->client().stop();
         return;
@@ -298,13 +298,13 @@ void ConfigManager::startAP() {
 
     WiFi.mode(WIFI_AP);
     WiFi.softAP(apName, apPassword);
-	
+
     delay(500); // Need to wait to get IP
-	
+
     IPAddress ip(192, 168, 1, 1);
     IPAddress NMask(255, 255, 255, 0);
     WiFi.softAPConfig(ip, ip, NMask);
-	
+
     DebugPrint("AP Name: ");
     DebugPrintln(apName);
 
@@ -348,7 +348,7 @@ void ConfigManager::createBaseWebServer() {
     server.reset(new WebServer(this->webPort));
     DebugPrint(F("Webserver enabled on port: "));
     DebugPrintln(webPort);
-    
+
     server->collectHeaders(headerKeys, headerKeysSize);
 
     server->on("/", HTTPMethod::HTTP_GET, std::bind(&ConfigManager::handleAPGet, this));
@@ -361,8 +361,8 @@ void ConfigManager::createBaseWebServer() {
 void ConfigManager::clearWifiSettings(bool reboot) {
     char ssid[SSID_LENGTH];
     char password[PASSWORD_LENGTH];
-    memset(ssid, NULL, SSID_LENGTH);
-    memset(password, NULL, PASSWORD_LENGTH);
+    memset(ssid, 0, SSID_LENGTH);
+    memset(password, 0, PASSWORD_LENGTH);
 
     DebugPrintln(F("Clearing WiFi connection."));
     storeWifiSettings(ssid, password, true);
@@ -429,7 +429,7 @@ void ConfigManager::writeConfig() {
 }
 
 boolean ConfigManager::isIp(String str) {
-  for (int i = 0; i < str.length(); i++) {
+  for (uint i = 0; i < str.length(); i++) {
     int c = str.charAt(i);
     if (c != '.' && (c < '0' || c > '9')) {
       return false;
