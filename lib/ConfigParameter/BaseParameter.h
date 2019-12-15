@@ -4,7 +4,6 @@
 #include <ArduinoJson.h>
 #include <DebugPrint.h>
 
-enum Mode {ap, api};
 enum ParameterMode { get, set, both};
 
 /**

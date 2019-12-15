@@ -42,6 +42,8 @@ extern const char mimePlain[];
 extern const char mimeCSS[];
 extern const char mimeJS[];
 
+enum Mode {ap, api};
+
 /**
  * Config Manager
  */
