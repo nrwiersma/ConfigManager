@@ -1,5 +1,5 @@
 #ifndef __CONFIG_PARAMETER_H__
-#define __CONFIG_PARAMETER_H_
+#define __CONFIG_PARAMETER_H__
 
 #include <BaseParameter.h>
 
