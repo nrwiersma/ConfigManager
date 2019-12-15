@@ -38,7 +38,6 @@ public:
 private:
     const char *name;
     T *ptr;
-    std::function<void(const char*)> cb;
     ParameterMode mode;
 };
 
