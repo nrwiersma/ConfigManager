@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <ConfigParameter.h>
 
-bool DEBUG_MODE = false;
-
 void test_sets_config_parameter_mode() {
   const char *variable = "baphled";
   ConfigParameter<const char*> parameter = ConfigParameter<const char*>("username", &variable, both);

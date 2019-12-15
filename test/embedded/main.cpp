@@ -6,8 +6,11 @@
 #include "ConfigParameterTest.h"
 #include "ConfigStringParameterTest.h"
 
+bool DEBUG_MODE = false;
+
 void setup() {
   delay(2000);
+
   UNITY_BEGIN();
 
   // ConfigParameterTest
