@@ -32,7 +32,8 @@ $( document ).ready(function() {
       var value = this.value;
       var dataType = input[0].getAttribute("data-type");
       if (dataType == "number") value = parseFloat(value);
-        
+      if (dataType == "boolean") value = value == "on";
+
       if (o[this.name]) {
         if (!o[this.name].push) {
           o[this.name] = [o[this.name]];
@@ -68,4 +69,4 @@ $( document ).ready(function() {
       return false;
     }
   });
-});  
+});

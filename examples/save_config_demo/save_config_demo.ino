@@ -8,6 +8,7 @@ struct Config {
   char device_name[32];
   float inching_delay;
   int8_t led;
+  bool enabled;
 } config;
 
 struct Metadata {
@@ -29,16 +30,16 @@ void APICallback(WebServer *server) {
   server->on("/disconnect", HTTPMethod::HTTP_GET, [server](){
     configManager.clearWifiSettings(false);
   });
-  
+
   server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
     configManager.streamFile(settingsHTML, mimeHTML);
   });
-  
-  // NOTE: css/js can be embedded in a single page HTML 
+
+  // NOTE: css/js can be embedded in a single page HTML
   server->on("/styles.css", HTTPMethod::HTTP_GET, [server](){
     configManager.streamFile(stylesCSS, mimeCSS);
   });
-  
+
   server->on("/main.js", HTTPMethod::HTTP_GET, [server](){
     configManager.streamFile(mainJS, mimeJS);
   });
@@ -59,6 +60,7 @@ void setup() {
   configManager.addParameter("device_name", config.device_name, 32);
   configManager.addParameter("inching_delay", &config.inching_delay);
   configManager.addParameter("led", &config.led);
+  configManager.addParameter("enabled", &config.enabled);
 
   // Meta Settings
   configManager.addParameter("version", &meta.version, get);
