@@ -18,8 +18,16 @@ $( document ).ready(function() {
          url: '/settings',
          success: function(data) {
            $.each(data, function(key, value, data) {
-             var input = "input:text[name='" + key + "']";
-             $(input).val(value)
+             var input = document.getElementsByName(key);
+             if (input.length > 0) {
+               var dataType = input[0].getAttribute("data-type");
+               if (dataType == "boolean") {
+                 $(input[0]).prop("checked", value);
+                 return
+               }
+
+               $(input[0]).val(value);
+             }
            });
          }
   });
