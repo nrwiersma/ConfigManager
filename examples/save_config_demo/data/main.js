@@ -34,6 +34,7 @@ $( document ).ready(function() {
 
   $.fn.serializeObject = function() {
     var o = {};
+    
     var a = this.serializeArray();
     $.each(a, function() {
       var input = document.getElementsByName(this.name);
@@ -51,6 +52,14 @@ $( document ).ready(function() {
         o[this.name] = value || '';
       }
     });
+
+    var c = $('input[type=radio],input[type=checkbox]',this);
+    $.each(c, function(){
+      if(!o.hasOwnProperty(this.name)){
+        o[this.name] = false;
+      }
+    });
+
     return o;
   };
 
