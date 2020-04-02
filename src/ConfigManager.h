@@ -75,13 +75,17 @@ public:
     }
 
     void fromJson(JsonObject *json) {
-        if (json->containsKey(name) && json->is<T>(name)) {
-            *ptr = json->get<T>(name);
+        if (json->containsKey(name) && json->getMember(name).is<T>()) {
+            *ptr = json->getMember(name).as<T>();
         }
     }
 
     void toJson(JsonObject *json) {
-        json->set(name, *ptr);
+        // json->set(name, *ptr);
+        DynamicJsonDocument doc(1024);
+        JsonObject obj = doc.to<JsonObject>();
+        obj.operator[](name) = *ptr;
+        json->set(obj);
     }
 
     void clearData() {
@@ -114,8 +118,8 @@ public:
     }
 
     void fromJson(JsonObject *json) {
-        if (json->containsKey(name) && json->is<char *>(name)) {
-            const char * value = json->get<const char *>(name);
+        if (json->containsKey(name) && json->getMember(name).is<char *>()) {
+            const char * value = json->getMember(name).as<const char *>();
 
             memset(ptr, 0, length);
             strncpy(ptr, const_cast<char*>(value), length - 1);
@@ -123,7 +127,10 @@ public:
     }
 
     void toJson(JsonObject *json) {
-        json->set(name, ptr);
+        DynamicJsonDocument doc(1024);
+        JsonObject obj = doc.createNestedObject();
+        obj[name] = ptr;
+        json->set(obj);
     }
 
     void clearData() {
@@ -212,7 +219,7 @@ private:
     std::function<void(WebServer*)> apCallback;
     std::function<void(WebServer*)> apiCallback;
 
-    JsonObject &decodeJson(String jsonString);
+    JsonObject decodeJson(String jsonString);
 
     void handleAPGet();
     void handleAPPost();

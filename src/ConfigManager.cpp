@@ -53,7 +53,7 @@ void ConfigManager::setAPICallback(std::function<void(WebServer*)> callback) {
 }
 
 void ConfigManager::loop() {
-    if (mode == ap && apTimeout > 0 && ((millis() - apStart) / 1000) > apTimeout) {
+    if (mode == ap && apTimeout > 0 && ((millis() - apStart) / 1000) > (uint16_t)apTimeout) {
         ESP.restart();
     }
 
@@ -70,21 +70,22 @@ void ConfigManager::save() {
     this->writeConfig();
 }
 
-JsonObject &ConfigManager::decodeJson(String jsonString)
-{
-    DynamicJsonBuffer jsonBuffer;
+JsonObject ConfigManager::decodeJson(String jsonString) {
+    DynamicJsonDocument doc(1024);
 
     if (jsonString.length() == 0) {
-        return jsonBuffer.createObject();
+        return doc.as<JsonObject>();
     }
 
-    JsonObject& obj = jsonBuffer.parseObject(jsonString);
+    auto error = deserializeJson(doc, jsonString);
 
-    if (!obj.success()) {
-        return jsonBuffer.createObject();
+    if (error) {
+        Serial.print(F("deserializeJson() failed with code "));
+        Serial.println(error.c_str());
+        return doc.as<JsonObject>();
     }
 
-    return obj;
+    return doc.as<JsonObject>();
 }
 
 void ConfigManager::streamFile(const char *file, const char mime[]) {
@@ -111,10 +112,10 @@ void ConfigManager::handleAPPost() {
     String password;
 
     if (isJson) {
-        JsonObject& obj = this->decodeJson(server->arg("plain"));
+        JsonObject obj = decodeJson(server->arg("plain"));
 
-        ssid = obj.get<String>("ssid");
-        password = obj.get<String>("password");
+        ssid = obj.getMember("ssid").as<String>();
+        password = obj.getMember("password").as<String>();
     } else {
         ssid = server->arg("ssid");
         password = server->arg("password");
@@ -133,8 +134,8 @@ void ConfigManager::handleAPPost() {
 }
 
 void ConfigManager::handleScanGet() {
-    DynamicJsonBuffer jsonBuffer;
-    JsonArray& jsonArray = jsonBuffer.createArray();
+    DynamicJsonDocument doc(1024);
+    JsonArray jsonArray = doc.createNestedArray();
 
     DebugPrintln("Scanning WiFi networks...");
     int n = WiFi.scanNetworks();
@@ -157,26 +158,25 @@ void ConfigManager::handleScanGet() {
             DebugPrint(" - Security: ");
             DebugPrintln(security);
 
-            DynamicJsonBuffer jsonBufferItem;
-            JsonObject& obj = jsonBuffer.createObject();
-            obj.set("ssid", ssid);
-            obj.set("strength", rssi);
-            obj.set("security", security == "none" ? false : true);
+            JsonObject obj = doc.createNestedObject();
+            obj["ssid"] = ssid;
+            obj["strength"] = rssi;
+            obj["security"] = security == "none" ? false : true;
             jsonArray.add(obj);
         }
     }
 
     String body;
-    jsonArray.printTo(body);
+    serializeJson(jsonArray, body);
 
     server->send(200, FPSTR(mimeJSON), body);
 }
 
 void ConfigManager::handleRESTGet() {
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& obj = jsonBuffer.createObject();
+    DynamicJsonDocument doc(1024);
+    JsonObject obj = doc.createNestedObject();
 
-    std::list<BaseParameter*>::iterator it;
+    std::list<BaseParameter *>::iterator it;
     for (it = parameters.begin(); it != parameters.end(); ++it) {
         if ((*it)->getMode() == set) {
             continue;
@@ -186,19 +186,21 @@ void ConfigManager::handleRESTGet() {
     }
 
     String body;
-    obj.printTo(body);
+    serializeJson(obj, body);
 
     server->send(200, FPSTR(mimeJSON), body);
 }
 
 void ConfigManager::handleRESTPut() {
-    JsonObject& obj = this->decodeJson(server->arg("plain"));
-    if (!obj.success()) {
+    DynamicJsonDocument doc(1024);
+    auto error = deserializeJson(doc, server->arg("plain"));
+    if (error) {
         server->send(400, FPSTR(mimeJSON), "");
         return;
     }
+    JsonObject obj = doc.as<JsonObject>();
 
-    std::list<BaseParameter*>::iterator it;
+    std::list<BaseParameter *>::iterator it;
     for (it = parameters.begin(); it != parameters.end(); ++it) {
         if ((*it)->getMode() == get) {
             continue;
@@ -216,7 +218,7 @@ void ConfigManager::handleNotFound() {
     String URI = toStringIP(server->client().localIP()) + String(":") + String(webPort);
     String header = server->hostHeader();
 
-    if ( !isIp(header) && header != URI) {
+    if (!isIp(header) && header != URI) {
         DebugPrint(F("Unknown URL: "));
         DebugPrintln(header);
         server->sendHeader("Location", String("http://") + URI, true);
@@ -357,7 +359,6 @@ void ConfigManager::createBaseWebServer() {
     server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 }
 
-
 void ConfigManager::clearWifiSettings(bool reboot) {
     char ssid[SSID_LENGTH];
     char password[PASSWORD_LENGTH];
@@ -417,7 +418,7 @@ void ConfigManager::clearSettings(bool reboot) {
 void ConfigManager::readConfig() {
     byte *ptr = (byte *)config;
 
-    for (int i = 0; i < configSize; i++) {
+    for (int i = 0; i < (int16_t)configSize; i++) {
         *(ptr++) = EEPROM.read(CONFIG_OFFSET + i);
     }
 }
@@ -425,27 +426,33 @@ void ConfigManager::readConfig() {
 void ConfigManager::writeConfig() {
     byte *ptr = (byte *)config;
 
-    for (int i = 0; i < configSize; i++) {
+    for (int i = 0; i < (int16_t)configSize; i++) {
         EEPROM.write(CONFIG_OFFSET + i, *(ptr++));
     }
     EEPROM.commit();
 }
 
 boolean ConfigManager::isIp(String str) {
-  for (uint i = 0; i < str.length(); i++) {
-    int c = str.charAt(i);
-    if (c != '.' && (c < '0' || c > '9')) {
-      return false;
+    for (uint i = 0; i < str.length(); i++) {
+        int c = str.charAt(i);
+        if (c != '.' && (c < '0' || c > '9')) {
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 }
 
 String ConfigManager::toStringIP(IPAddress ip) {
-  String res = "";
-  for (int i = 0; i < 3; i++) {
-    res += String((ip >> (8 * i)) & 0xFF) + ".";
-  }
-  res += String(((ip >> 8 * 3)) & 0xFF);
-  return res;
+    String res = "";
+    for (int i = 0; i < 3; i++) {
+        res += String((ip >> (8 * i)) & 0xFF) + ".";
+    }
+    res += String(((ip >> 8 * 3)) & 0xFF);
+    return res;
 }
+
+#if defined(localbuild)
+// used to compile the project from the project and not as a library from another one
+void setup(){}
+void loop(){}
+#endif
