@@ -81,10 +81,7 @@ class ConfigParameter : public BaseParameter {
 
   void toJson(JsonObject* json) {
     // json->set(name, *ptr);
-    DynamicJsonDocument doc(1024);
-    JsonObject obj = doc.to<JsonObject>();
-    obj.operator[](name) = *ptr;
-    json->set(obj);
+    json->getOrAddMember(name).set(*ptr);
   }
 
   void clearData() {
@@ -127,10 +124,7 @@ class ConfigStringParameter : public BaseParameter {
   }
 
   void toJson(JsonObject* json) {
-    DynamicJsonDocument doc(1024);
-    JsonObject obj = doc.createNestedObject();
-    obj[name] = ptr;
-    json->set(obj);
+    json->getOrAddMember(name).set(ptr);
   }
 
   void clearData() {
