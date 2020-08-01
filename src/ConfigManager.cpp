@@ -12,6 +12,68 @@ const char mimeJS[] PROGMEM = "application/javascript";
 
 bool DEBUG_MODE = false;
 
+//
+// Setup and Loop
+//
+void ConfigManager::setup() {
+  char magic[MAGIC_LENGTH];
+  char ssid[SSID_LENGTH];
+  char password[PASSWORD_LENGTH];
+
+  DebugPrintln(F("Reading saved configuration"));
+
+  DebugPrint(F("MAC: "));
+  DebugPrintln(WiFi.macAddress());
+
+  EEPROM.get(0, magic);
+  EEPROM.get(MAGIC_LENGTH, ssid);
+  DebugPrint(F("SSID: \""));
+  DebugPrint(ssid);
+  DebugPrintln(F("\""));
+  EEPROM.get(MAGIC_LENGTH + SSID_LENGTH, password);
+  readConfig();
+
+  if (memcmp(magic, magicBytes, MAGIC_LENGTH) == 0) {
+    WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
+    if (wifiConnected()) {
+      DebugPrint(F("Connected to "));
+      DebugPrint(ssid);
+      DebugPrint(F(" with "));
+      DebugPrintln(WiFi.localIP());
+
+      WiFi.mode(WIFI_STA);
+      startApi();
+      return;
+    }
+  } else {
+    // We are at a cold start, don't bother timing out.
+    DebugPrint(F("MagicBytes mismatch - SSID: "));
+    DebugPrintln(ssid);
+    apTimeout = 0;
+  }
+
+  startAP();
+}
+
+void ConfigManager::loop() {
+  if (mode == ap && apTimeout > 0 &&
+      ((millis() - apStart) / 1000) > (uint16_t)apTimeout) {
+    ESP.restart();
+  }
+
+  if (dnsServer) {
+    dnsServer->processNextRequest();
+  }
+
+  if (server) {
+    server->handleClient();
+  }
+}
+
+//
+// ConfigManager AP Utilities 
+//
+
 Mode ConfigManager::getMode() {
   return this->mode;
 }
@@ -32,16 +94,56 @@ void ConfigManager::setAPTimeout(const int timeout) {
   this->apTimeout = timeout;
 }
 
-void ConfigManager::setWifiConnectRetries(const int retries) {
-  this->wifiConnectRetries = retries;
+void ConfigManager::startAP() {
+  mode = ap;
+
+  DebugPrintln(F("Starting Access Point"));
+
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(apName, apPassword);
+
+  delay(500);  // Need to wait to get IP
+
+  IPAddress ip(192, 168, 1, 1);
+  IPAddress NMask(255, 255, 255, 0);
+  WiFi.softAPConfig(ip, ip, NMask);
+
+  DebugPrint("AP Name: ");
+  DebugPrintln(apName);
+
+  IPAddress myIP = WiFi.softAPIP();
+  DebugPrint("AP IP address: ");
+  DebugPrintln(myIP);
+
+  dnsServer.reset(new DNSServer);
+  dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
+  dnsServer->start(DNS_PORT, "*", ip);
+
+  createBaseWebServer();
+
+  if (apCallback) {
+    apCallback(server.get());
+  }
+
+  server->begin();
+
+  apStart = millis();
 }
 
-void ConfigManager::setWifiConnectInterval(const int interval) {
-  this->wifiConnectInterval = interval;
-}
+void ConfigManager::startApi() {
+  mode = api;
 
-void ConfigManager::setWebPort(const int port) {
-  this->webPort = port;
+  createBaseWebServer();
+  server->on("/settings", HTTPMethod::HTTP_GET,
+             std::bind(&ConfigManager::handleRESTGet, this));
+  server->on("/settings", HTTPMethod::HTTP_PUT,
+             std::bind(&ConfigManager::handleRESTPut, this));
+
+  if (apiCallback) {
+    apiCallback(server.get());
+  }
+
+  server->begin();
 }
 
 void ConfigManager::setAPCallback(std::function<void(WebServer*)> callback) {
@@ -52,21 +154,87 @@ void ConfigManager::setAPICallback(std::function<void(WebServer*)> callback) {
   this->apiCallback = callback;
 }
 
-void ConfigManager::loop() {
-  if (mode == ap && apTimeout > 0 &&
-      ((millis() - apStart) / 1000) > (uint16_t)apTimeout) {
+//
+// ConfigManager Wifi Utilitiees
+//
+void ConfigManager::setWifiConnectRetries(const int retries) {
+  this->wifiConnectRetries = retries;
+}
+
+void ConfigManager::setWifiConnectInterval(const int interval) {
+  this->wifiConnectInterval = interval;
+}
+
+bool ConfigManager::wifiConnected() {
+  DebugPrint(F("Waiting for WiFi to connect"));
+
+  int i = 0;
+  while (i < wifiConnectRetries) {
+    if (WiFi.status() == WL_CONNECTED) {
+      DebugPrintln("");
+      return true;
+    }
+
+    DebugPrint(".");
+
+    delay(wifiConnectInterval);
+    i++;
+  }
+
+  DebugPrintln("");
+  DebugPrintln(F("Connection timed out"));
+
+  return false;
+}
+
+void ConfigManager::storeWifiSettings(String ssid,
+                                      String password,
+                                      bool resetMagic) {
+  char ssidChar[SSID_LENGTH];
+  char passwordChar[PASSWORD_LENGTH];
+
+  // We cannot check the EEPROM length on ESP32
+#if defined(ARDUINO_ARCH_ESP8266)
+  if (EEPROM.length() == 0) {
+    DebugPrintln(
+        F("WiFi Settings cannot be stored before ConfigManager::begin()"));
+    return;
+  }
+#endif
+
+  strncpy(ssidChar, ssid.c_str(), SSID_LENGTH);
+  strncpy(passwordChar, password.c_str(), PASSWORD_LENGTH);
+
+  DebugPrint(F("Storing WiFi Settings for SSID: \""));
+  DebugPrint(ssidChar);
+  DebugPrintln(F("\""));
+
+  EEPROM.put(0, resetMagic ? magicBytesEmpty : magicBytes);
+  EEPROM.put(MAGIC_LENGTH, ssidChar);
+  EEPROM.put(MAGIC_LENGTH + SSID_LENGTH, passwordChar);
+  bool wroteChange = EEPROM.commit();
+
+  DebugPrint(F("EEPROM committed: "));
+  DebugPrintln(wroteChange ? F("true") : F("false"));
+}
+
+void ConfigManager::clearWifiSettings(bool reboot) {
+  char ssid[SSID_LENGTH];
+  char password[PASSWORD_LENGTH];
+  memset(ssid, 0, SSID_LENGTH);
+  memset(password, 0, PASSWORD_LENGTH);
+
+  DebugPrintln(F("Clearing WiFi connection."));
+  storeWifiSettings(ssid, password, true);
+
+  if (reboot) {
     ESP.restart();
-  }
-
-  if (dnsServer) {
-    dnsServer->processNextRequest();
-  }
-
-  if (server) {
-    server->handleClient();
   }
 }
 
+//
+// ConfigManager Config Utilities
+//
 void ConfigManager::save() {
   this->writeConfig();
 }
@@ -87,6 +255,63 @@ JsonObject ConfigManager::decodeJson(String jsonString) {
   }
 
   return doc.as<JsonObject>();
+}
+
+void ConfigManager::readConfig() {
+  byte* ptr = (byte*)config;
+
+  for (int i = 0; i < (int16_t)configSize; i++) {
+    *(ptr++) = EEPROM.read(CONFIG_OFFSET + i);
+  }
+}
+
+void ConfigManager::writeConfig() {
+  byte* ptr = (byte*)config;
+
+  for (int i = 0; i < (int16_t)configSize; i++) {
+    EEPROM.write(CONFIG_OFFSET + i, *(ptr++));
+  }
+  EEPROM.commit();
+}
+
+void ConfigManager::clearSettings(bool reboot) {
+  DebugPrintln(F("Clearing Settings...."));
+  std::list<BaseParameter*>::iterator it;
+  for (it = parameters.begin(); it != parameters.end(); ++it) {
+    (*it)->clearData();
+  }
+
+  writeConfig();
+
+  if (reboot) {
+    ESP.restart();
+  }
+}
+
+//
+// ConfigManager HTTP Utilities
+//
+void ConfigManager::setWebPort(const int port) {
+  this->webPort = port;
+}
+
+void ConfigManager::createBaseWebServer() {
+  const char* headerKeys[] = {"Content-Type"};
+  size_t headerKeysSize = sizeof(headerKeys) / sizeof(char*);
+
+  server.reset(new WebServer(this->webPort));
+  DebugPrint(F("Webserver enabled on port: "));
+  DebugPrintln(webPort);
+
+  server->collectHeaders(headerKeys, headerKeysSize);
+
+  server->on("/", HTTPMethod::HTTP_GET,
+             std::bind(&ConfigManager::handleAPGet, this));
+  server->on("/", HTTPMethod::HTTP_POST,
+             std::bind(&ConfigManager::handleAPPost, this));
+  server->on("/scan", HTTPMethod::HTTP_GET,
+             std::bind(&ConfigManager::handleScanGet, this));
+  server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
 }
 
 void ConfigManager::streamFile(const char* file, const char mime[]) {
@@ -235,215 +460,9 @@ void ConfigManager::handleNotFound() {
   server->send(404, FPSTR(mimePlain), "File Not Found");
 }
 
-bool ConfigManager::wifiConnected() {
-  DebugPrint(F("Waiting for WiFi to connect"));
-
-  int i = 0;
-  while (i < wifiConnectRetries) {
-    if (WiFi.status() == WL_CONNECTED) {
-      DebugPrintln("");
-      return true;
-    }
-
-    DebugPrint(".");
-
-    delay(wifiConnectInterval);
-    i++;
-  }
-
-  DebugPrintln("");
-  DebugPrintln(F("Connection timed out"));
-
-  return false;
-}
-
-void ConfigManager::setup() {
-  char magic[MAGIC_LENGTH];
-  char ssid[SSID_LENGTH];
-  char password[PASSWORD_LENGTH];
-
-  DebugPrintln(F("Reading saved configuration"));
-
-  DebugPrint(F("MAC: "));
-  DebugPrintln(WiFi.macAddress());
-
-  EEPROM.get(0, magic);
-  EEPROM.get(MAGIC_LENGTH, ssid);
-  DebugPrint(F("SSID: \""));
-  DebugPrint(ssid);
-  DebugPrintln(F("\""));
-  EEPROM.get(MAGIC_LENGTH + SSID_LENGTH, password);
-  readConfig();
-
-  if (memcmp(magic, magicBytes, MAGIC_LENGTH) == 0) {
-    WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
-    if (wifiConnected()) {
-      DebugPrint(F("Connected to "));
-      DebugPrint(ssid);
-      DebugPrint(F(" with "));
-      DebugPrintln(WiFi.localIP());
-
-      WiFi.mode(WIFI_STA);
-      startApi();
-      return;
-    }
-  } else {
-    // We are at a cold start, don't bother timing out.
-    DebugPrint(F("MagicBytes mismatch - SSID: "));
-    DebugPrintln(ssid);
-    apTimeout = 0;
-  }
-
-  startAP();
-}
-
-void ConfigManager::startAP() {
-  mode = ap;
-
-  DebugPrintln(F("Starting Access Point"));
-
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(apName, apPassword);
-
-  delay(500);  // Need to wait to get IP
-
-  IPAddress ip(192, 168, 1, 1);
-  IPAddress NMask(255, 255, 255, 0);
-  WiFi.softAPConfig(ip, ip, NMask);
-
-  DebugPrint("AP Name: ");
-  DebugPrintln(apName);
-
-  IPAddress myIP = WiFi.softAPIP();
-  DebugPrint("AP IP address: ");
-  DebugPrintln(myIP);
-
-  dnsServer.reset(new DNSServer);
-  dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer->start(DNS_PORT, "*", ip);
-
-  createBaseWebServer();
-
-  if (apCallback) {
-    apCallback(server.get());
-  }
-
-  server->begin();
-
-  apStart = millis();
-}
-
-void ConfigManager::startApi() {
-  mode = api;
-
-  createBaseWebServer();
-  server->on("/settings", HTTPMethod::HTTP_GET,
-             std::bind(&ConfigManager::handleRESTGet, this));
-  server->on("/settings", HTTPMethod::HTTP_PUT,
-             std::bind(&ConfigManager::handleRESTPut, this));
-
-  if (apiCallback) {
-    apiCallback(server.get());
-  }
-
-  server->begin();
-}
-
-void ConfigManager::createBaseWebServer() {
-  const char* headerKeys[] = {"Content-Type"};
-  size_t headerKeysSize = sizeof(headerKeys) / sizeof(char*);
-
-  server.reset(new WebServer(this->webPort));
-  DebugPrint(F("Webserver enabled on port: "));
-  DebugPrintln(webPort);
-
-  server->collectHeaders(headerKeys, headerKeysSize);
-
-  server->on("/", HTTPMethod::HTTP_GET,
-             std::bind(&ConfigManager::handleAPGet, this));
-  server->on("/", HTTPMethod::HTTP_POST,
-             std::bind(&ConfigManager::handleAPPost, this));
-  server->on("/scan", HTTPMethod::HTTP_GET,
-             std::bind(&ConfigManager::handleScanGet, this));
-  server->onNotFound(std::bind(&ConfigManager::handleNotFound, this));
-}
-
-void ConfigManager::clearWifiSettings(bool reboot) {
-  char ssid[SSID_LENGTH];
-  char password[PASSWORD_LENGTH];
-  memset(ssid, 0, SSID_LENGTH);
-  memset(password, 0, PASSWORD_LENGTH);
-
-  DebugPrintln(F("Clearing WiFi connection."));
-  storeWifiSettings(ssid, password, true);
-
-  if (reboot) {
-    ESP.restart();
-  }
-}
-
-void ConfigManager::storeWifiSettings(String ssid,
-                                      String password,
-                                      bool resetMagic) {
-  char ssidChar[SSID_LENGTH];
-  char passwordChar[PASSWORD_LENGTH];
-
-  // We cannot check the EEPROM length on ESP32
-#if defined(ARDUINO_ARCH_ESP8266)
-  if (EEPROM.length() == 0) {
-    DebugPrintln(
-        F("WiFi Settings cannot be stored before ConfigManager::begin()"));
-    return;
-  }
-#endif
-
-  strncpy(ssidChar, ssid.c_str(), SSID_LENGTH);
-  strncpy(passwordChar, password.c_str(), PASSWORD_LENGTH);
-
-  DebugPrint(F("Storing WiFi Settings for SSID: \""));
-  DebugPrint(ssidChar);
-  DebugPrintln(F("\""));
-
-  EEPROM.put(0, resetMagic ? magicBytesEmpty : magicBytes);
-  EEPROM.put(MAGIC_LENGTH, ssidChar);
-  EEPROM.put(MAGIC_LENGTH + SSID_LENGTH, passwordChar);
-  bool wroteChange = EEPROM.commit();
-
-  DebugPrint(F("EEPROM committed: "));
-  DebugPrintln(wroteChange ? F("true") : F("false"));
-}
-
-void ConfigManager::clearSettings(bool reboot) {
-  DebugPrintln(F("Clearing Settings...."));
-  std::list<BaseParameter*>::iterator it;
-  for (it = parameters.begin(); it != parameters.end(); ++it) {
-    (*it)->clearData();
-  }
-
-  writeConfig();
-
-  if (reboot) {
-    ESP.restart();
-  }
-}
-
-void ConfigManager::readConfig() {
-  byte* ptr = (byte*)config;
-
-  for (int i = 0; i < (int16_t)configSize; i++) {
-    *(ptr++) = EEPROM.read(CONFIG_OFFSET + i);
-  }
-}
-
-void ConfigManager::writeConfig() {
-  byte* ptr = (byte*)config;
-
-  for (int i = 0; i < (int16_t)configSize; i++) {
-    EEPROM.write(CONFIG_OFFSET + i, *(ptr++));
-  }
-  EEPROM.commit();
-}
-
+//
+// ConfigManager General Util
+//
 boolean ConfigManager::isIp(String str) {
   for (uint i = 0; i < str.length(); i++) {
     int c = str.charAt(i);
