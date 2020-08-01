@@ -248,7 +248,16 @@ server->on("/settings.html", HTTPMethod::HTTP_GET, [server](){
 });
 ```
 
-> Stream a file to the server when using custom routing endpoints. See `example/save_config_demo.ino`
+> Stream a file to the server when using custom routing endpoints.
+> See `example/save_config_demo/save_config_demo.ino`
+
+### stopWebserver()
+```
+void ConfigManager::stopWebserver()
+```
+> Stops the built-in webserver to allow your custom project
+> webserver to run without port/resource interference.
+> See `example/custom-http/custom-http.ino`
 
 
 # Endpoints

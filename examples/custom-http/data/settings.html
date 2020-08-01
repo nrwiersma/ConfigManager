@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.16.0/jquery.validate.min.js"></script>
+    <script src="main.js"></script>
+    <title>ConfigManager</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1 style="text-align: center;">Settings</h1>
+      <form method="post" action="/settings">
+        <div class="field-group">
+          <label>Device Name</label>
+          <input name="deviceName" type="text" size="32" data-type="text">
+        </div>
+        <div class="field-group">
+          <label>Some Number</label>
+          <input name="someNumber" type="text" size="32" data-type="number">
+        </div>
+        <div class="field-group">
+          <label>Debug Enabled</label>
+          <input name="debugEnabled" type="checkbox" data-type="boolean">
+        </div>
+        <div class="button-container">
+          <h2 style="" id="status"></h2>
+          <button type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
