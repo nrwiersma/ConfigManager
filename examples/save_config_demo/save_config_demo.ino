@@ -44,10 +44,15 @@ void APICallback(WebServer *server) {
     configManager.streamFile(mainJS, mimeJS);
   });
 
+  server->on("/reboot", HTTPMethod::HTTP_GET, [server](){
+    ESP.restart();
+  });
+
 }
 
 void setup() {
   Serial.begin(115200);
+  DEBUG_MODE = true;
   DebugPrintln(F(""));
 
   meta.version = 3;
@@ -56,7 +61,7 @@ void setup() {
   configManager.setAPName("Demo");
   configManager.setAPFilename("/index.html");
 
-  // Settings variables 
+  // Settings variables
   configManager.addParameter("device_name", config.device_name, 32);
   configManager.addParameter("inching_delay", &config.inching_delay);
   configManager.addParameter("led", &config.led);
@@ -74,4 +79,6 @@ void setup() {
 
 void loop() {
   configManager.loop();
+
+  // Add your loop code here
 }
