@@ -175,6 +175,9 @@ class ConfigManager {
   void startWebserver();
   void stopWebserver();
   void save();
+  void startAP();
+  void startAPApi();
+  void startApi();
 
   template <typename T>
   void begin(T& config) {
@@ -239,9 +242,6 @@ class ConfigManager {
 
   bool wifiConnected();
   void setup();
-  void startAP();
-  void startAPApi();
-  void startApi();
   void createBaseWebServer();
 
   void readConfig();

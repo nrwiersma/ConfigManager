@@ -32,20 +32,22 @@ void ConfigManager::setup() {
     DebugPrint(ssid);
     DebugPrintln(F("\""));
 
-    EEPROM.get(MAGIC_LENGTH + SSID_LENGTH, password);
     readConfig();
 
-    WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
+    if (strlen(ssid) > 0) {
+      EEPROM.get(MAGIC_LENGTH + SSID_LENGTH, password);
+      WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
 
-    if (wifiConnected()) {
-      DebugPrint(F("Connected to "));
-      DebugPrint(ssid);
-      DebugPrint(F(" with "));
-      DebugPrintln(WiFi.localIP());
+      if (wifiConnected()) {
+        DebugPrint(F("Connected to "));
+        DebugPrint(ssid);
+        DebugPrint(F(" with "));
+        DebugPrintln(WiFi.localIP());
 
-      WiFi.mode(WIFI_STA);
+        WiFi.mode(WIFI_STA);
 
-      startApi();
+        startApi();
+      }
     }
   } else {
     // We are at a cold start, don't bother timing out.
@@ -235,7 +237,7 @@ void ConfigManager::clearWifiSettings(bool reboot) {
   memset(password, 0, PASSWORD_LENGTH);
 
   DebugPrintln(F("Clearing WiFi connection."));
-  storeWifiSettings(ssid, password, true);
+  storeWifiSettings(ssid, password, false);
 
   if (reboot) {
     ESP.restart();
