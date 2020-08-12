@@ -23,32 +23,41 @@ void ConfigManager::setup() {
   DebugPrint(F("MAC: "));
   DebugPrintln(WiFi.macAddress());
 
-  DebugPrintln(F("Reading saved configuration"));
+  DebugPrintln(F("Checking for magic initialization"));
   EEPROM.get(0, magic);
 
   if (memcmp(magic, magicBytes, MAGIC_LENGTH) == 0) {
-    EEPROM.get(MAGIC_LENGTH, ssid);
-    DebugPrint(F("SSID: \""));
-    DebugPrint(ssid);
-    DebugPrintln(F("\""));
-
-    EEPROM.get(MAGIC_LENGTH + SSID_LENGTH, password);
+    DebugPrintln(F("Reading saved configuration"));
     readConfig();
 
-    WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
+    EEPROM.get(MAGIC_LENGTH, ssid);
 
-    if (wifiConnected()) {
-      DebugPrint(F("Connected to "));
+    if (strlen(ssid) > 0) {
+      DebugPrint(F("SSID: \""));
       DebugPrint(ssid);
-      DebugPrint(F(" with "));
-      DebugPrintln(WiFi.localIP());
+      DebugPrintln(F("\""));
 
-      WiFi.mode(WIFI_STA);
+      EEPROM.get(MAGIC_LENGTH + SSID_LENGTH, password);
+      WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
 
-      startApi();
+      if (wifiConnected()) {
+        DebugPrint(F("Connected to "));
+        DebugPrint(ssid);
+        DebugPrint(F(" with "));
+        DebugPrintln(WiFi.localIP());
+
+        WiFi.mode(WIFI_STA);
+
+        startApi();
+      }
+    } else {
+      DebugPrintln(F("No SSID found"));
     }
   } else {
     // We are at a cold start, don't bother timing out.
+    if (initCallback) {
+      initCallback();
+    }
     apTimeout = 0;
     DebugPrintln(F("MagicBytes mismatch"));
   }
@@ -163,6 +172,10 @@ void ConfigManager::setAPICallback(std::function<void(WebServer*)> callback) {
   this->apiCallback = callback;
 }
 
+void ConfigManager::setInitCallback(std::function<void()> callback) {
+  this->initCallback = callback;
+}
+
 //
 // ConfigManager Wifi Utilitiees
 //
@@ -198,8 +211,7 @@ bool ConfigManager::wifiConnected() {
 }
 
 void ConfigManager::storeWifiSettings(String ssid,
-                                      String password,
-                                      bool resetMagic) {
+                                      String password) {
   char ssidChar[SSID_LENGTH];
   char passwordChar[PASSWORD_LENGTH];
 
@@ -219,10 +231,9 @@ void ConfigManager::storeWifiSettings(String ssid,
   DebugPrint(ssidChar);
   DebugPrintln(F("\""));
 
-  EEPROM.put(0, resetMagic ? magicBytesEmpty : magicBytes);
   EEPROM.put(MAGIC_LENGTH, ssidChar);
   EEPROM.put(MAGIC_LENGTH + SSID_LENGTH, passwordChar);
-  bool wroteChange = EEPROM.commit();
+  bool wroteChange = this->commitChanges();
 
   DebugPrint(F("EEPROM committed: "));
   DebugPrintln(wroteChange ? F("true") : F("false"));
@@ -235,7 +246,7 @@ void ConfigManager::clearWifiSettings(bool reboot) {
   memset(password, 0, PASSWORD_LENGTH);
 
   DebugPrintln(F("Clearing WiFi connection."));
-  storeWifiSettings(ssid, password, true);
+  storeWifiSettings(ssid, password);
 
   if (reboot) {
     ESP.restart();
@@ -301,6 +312,13 @@ JsonObject ConfigManager::decodeJson(String jsonString) {
   return doc.as<JsonObject>();
 }
 
+void ConfigManager::clearAllSettings(bool reboot) {
+  EEPROM.put(0, magicBytesEmpty);
+  EEPROM.commit();
+  this->clearSettings(false);
+  this->clearWifiSettings(reboot);
+}
+
 void ConfigManager::readConfig() {
   byte* ptr = (byte*)config;
 
@@ -325,13 +343,18 @@ JsonObject ConfigManager::asJson() {
   return obj;
 }
 
+bool ConfigManager::commitChanges() {
+  EEPROM.put(0, magicBytes);
+  return EEPROM.commit();
+}
+
 void ConfigManager::writeConfig() {
   byte* ptr = (byte*)config;
 
   for (int i = 0; i < (int16_t)configSize; i++) {
     EEPROM.write(CONFIG_OFFSET + i, *(ptr++));
   }
-  EEPROM.commit();
+  this->commitChanges();
 }
 void ConfigManager::save() {
   this->writeConfig();
@@ -410,7 +433,8 @@ void ConfigManager::streamFile(const char* file, const char mime[]) {
 
   File f = SPIFFS.open(file, "r");
   if (!f) {
-    DebugPrintln(F("file open failed"));
+    DebugPrint(F("file open failed "));
+    DebugPrintln(file);
     handleNotFound();
     return;
   }
@@ -420,6 +444,8 @@ void ConfigManager::streamFile(const char* file, const char mime[]) {
 }
 
 void ConfigManager::handleAPGet() {
+  DebugPrint(F("Index Page: "));
+  DebugPrintln(apFilename);
   streamFile(apFilename, mimeHTML);
 }
 
@@ -443,7 +469,7 @@ void ConfigManager::handleAPPost() {
     return;
   }
 
-  storeWifiSettings(ssid, password, false);
+  storeWifiSettings(ssid, password);
 
   server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
 

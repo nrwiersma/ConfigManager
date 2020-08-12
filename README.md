@@ -156,6 +156,13 @@ void setAPTimeout(const int timeout)
 >
 > **Note:** *The timeout starts when the access point is started, but is evaluated in the loop function.*
 
+### setInitCallback
+```
+void setInitCallback(std::function<void()> callback)
+```
+> Sets a function that will be called when the ConfigManager is first initialized. This can be used to
+set default values on configuration parameters.
+
 ### setAPCallback
 ```
 void setAPCallback(std::function<void(WebServer*)> callback)
@@ -217,7 +224,12 @@ void addParameter(const char *name, char *variable, size_t size, ParameterMode m
 
 ### clearSettings(bool reboot)
 
-> Sets all settings to `NULL`. This is useful to initialize the memory of the device.
+> Sets all managed settings (not Wifi) to `NULL`. This is useful to clear all setting, but maintain Wifi.
+> The `bool reboot` indicates if the device should restart after clearing the values.
+
+### clearAllSettings(bool reboot)
+
+> Sets all settings (managed and Wifi) to `NULL`. This is useful to re-initialize the memory of the device.
 > The `bool reboot` indicates if the device should restart after clearing the values.
 
 ### begin
