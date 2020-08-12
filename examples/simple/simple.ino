@@ -19,6 +19,11 @@ void createCustomRoute(WebServer *server) {
     });
 }
 
+void initCallback() {
+    config.enabled = false;
+    configManager.save();
+}
+
 void setup() {
     DEBUG_MODE = true; // will enable debugging and log to serial monitor
     Serial.begin(115200);
@@ -35,8 +40,13 @@ void setup() {
     configManager.addParameter("password", config.password, 20, set);
     configManager.addParameter("version", &meta.version, get);
 
+    // Create custom routes to serve via callback hooks
     configManager.setAPCallback(createCustomRoute);
     configManager.setAPICallback(createCustomRoute);
+
+    // Create a initialization hook
+    // Will run until a memory write is performed.
+    configManager.setInitCallback(initCallback);
 
     configManager.begin(config);
 }

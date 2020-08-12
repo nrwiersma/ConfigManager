@@ -169,9 +169,11 @@ class ConfigManager {
   void handleNotFound();
   void clearSettings(bool reboot);
   void clearWifiSettings(bool reboot);
+  void clearAllSettings(bool reboot);
   void updateFromJson(JsonObject obj);
   void setAPCallback(std::function<void(WebServer*)> callback);
   void setAPICallback(std::function<void(WebServer*)> callback);
+  void setInitCallback(std::function<void()> callback);
   void startWebserver();
   void stopWebserver();
   void save();
@@ -229,6 +231,8 @@ class ConfigManager {
   std::function<void(WebServer*)> apCallback;
   std::function<void(WebServer*)> apiCallback;
 
+  std::function<void()> initCallback;
+
   JsonObject decodeJson(String jsonString);
 
   void handleAPGet();
@@ -246,7 +250,8 @@ class ConfigManager {
 
   void readConfig();
   void writeConfig();
-  void storeWifiSettings(String ssid, String password, bool resetMagic);
+  bool commitChanges();
+  void storeWifiSettings(String ssid, String password);
   boolean isIp(String str);
   String toStringIP(IPAddress ip);
 };
