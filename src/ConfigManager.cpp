@@ -400,7 +400,7 @@ void ConfigManager::startWebserver() {
 
 void ConfigManager::stopWebserver() {
   this->server->stop();
-  DebugPrintln(F("Webserver Stopped"));
+  DebugPrintln(F("ConfigManager Webserver Stopped"));
   this->webserverRunning = false;
 }
 
@@ -434,16 +434,27 @@ void ConfigManager::createBaseWebServer() {
 void ConfigManager::streamFile(const char* file, const char mime[]) {
   SPIFFS.begin();
 
-  File f = SPIFFS.open(file, "r");
-  if (!f) {
+  File f;
+
+  if (file[0] == '/') {
+    f = SPIFFS.open(file, "r");
+  } else {
+    size_t len = strlen(file);
+    char filepath[len+1];
+    strcpy(filepath, "/");
+    strcat(filepath, file);
+    f = SPIFFS.open(filepath, "r");
+  }
+
+  if (f) {
+    server->streamFile(f, FPSTR(mime));
+    f.close();
+  } else {
     DebugPrint(F("file open failed "));
     DebugPrintln(file);
     handleNotFound();
-    return;
   }
 
-  server->streamFile(f, FPSTR(mime));
-  f.close();
 }
 
 void ConfigManager::handleAPGet() {
