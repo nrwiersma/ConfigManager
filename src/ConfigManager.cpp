@@ -313,10 +313,13 @@ JsonObject ConfigManager::decodeJson(String jsonString) {
 }
 
 void ConfigManager::clearAllSettings(bool reboot) {
+  this->clearSettings(false);
+  this->clearWifiSettings(false);
   EEPROM.put(0, magicBytesEmpty);
   EEPROM.commit();
-  this->clearSettings(false);
-  this->clearWifiSettings(reboot);
+  if (reboot) {
+    ESP.restart();
+  }
 }
 
 void ConfigManager::readConfig() {
