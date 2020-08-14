@@ -184,6 +184,7 @@ class ConfigManager {
     this->configSize = sizeof(T);
 
     EEPROM.begin(CONFIG_OFFSET + this->configSize);
+    this->memoryInitialized = true;
 
     setup();
   }
@@ -211,6 +212,7 @@ class ConfigManager {
   void* config;
   size_t configSize;
 
+  bool memoryInitialized = false;
   bool webserverRunning = false;
 
   char* apName = (char*)"ConfigManager-Thing";
