@@ -215,14 +215,11 @@ void ConfigManager::storeWifiSettings(String ssid,
   char ssidChar[SSID_LENGTH];
   char passwordChar[PASSWORD_LENGTH];
 
-  // We cannot check the EEPROM length on ESP32
-#if defined(ARDUINO_ARCH_ESP8266)
-  if (EEPROM.length() == 0) {
+  if (!this->memoryInitialized) {
     DebugPrintln(
         F("WiFi Settings cannot be stored before ConfigManager::begin()"));
     return;
   }
-#endif
 
   strncpy(ssidChar, ssid.c_str(), SSID_LENGTH);
   strncpy(passwordChar, password.c_str(), PASSWORD_LENGTH);
