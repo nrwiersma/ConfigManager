@@ -179,6 +179,10 @@ void ConfigManager::setInitCallback(std::function<void()> callback) {
 //
 // ConfigManager Wifi Utilitiees
 //
+void ConfigManager::setWifiConfigURI(const char* uri) {
+  this->wifiConfigURI = (char*)uri;
+}
+
 void ConfigManager::setWifiConnectRetries(const int retries) {
   this->wifiConnectRetries = retries;
 }
@@ -415,9 +419,9 @@ void ConfigManager::createBaseWebServer() {
 
   server->collectHeaders(headerKeys, headerKeysSize);
 
-  server->on("/", HTTPMethod::HTTP_GET,
+  server->on(this->wifiConfigURI, HTTPMethod::HTTP_GET,
              std::bind(&ConfigManager::handleAPGet, this));
-  server->on("/", HTTPMethod::HTTP_POST,
+  server->on(this->wifiConfigURI, HTTPMethod::HTTP_POST,
              std::bind(&ConfigManager::handleAPPost, this));
   DebugPrintln("Index page registered");
 
