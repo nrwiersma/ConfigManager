@@ -175,6 +175,12 @@ void setAPICallback(std::function<void(WebServer*)> callback)
 ```
 > Sets a function that will be called when the WebServer is started in API/Settings mode allowing custom HTTP endpoints to be created.
 
+### setWifiConfigURI
+```
+void setWifiConfigURI(const char* uri)
+```
+> Changes the URI for the Wifi Configuration Page. Defaults to "/"
+
 ### setWifiConnectRetries
 ```
 void setWifiConnectRetries(const int retries)

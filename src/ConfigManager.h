@@ -161,6 +161,7 @@ class ConfigManager {
   void setAPPassword(const char* password);
   void setAPFilename(const char* filename);
   void setAPTimeout(const int timeout);
+  void setWifiConfigURI(const char* uri);
   void setWifiConnectRetries(const int retries);
   void setWifiConnectInterval(const int interval);
   void setWebPort(const int port);
@@ -220,6 +221,8 @@ class ConfigManager {
   char* apFilename = (char*)"/index.html";
   int apTimeout = 0;
   unsigned long apStart = 0;
+
+  char* wifiConfigURI = (char*)"/";
 
   int wifiConnectRetries = 20;
   int wifiConnectInterval = 500;
