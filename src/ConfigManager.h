@@ -178,6 +178,7 @@ class ConfigManager {
   void startWebserver();
   void stopWebserver();
   void save();
+  bool wifiConnected();
 
   template <typename T>
   void begin(T& config) {
@@ -224,6 +225,7 @@ class ConfigManager {
 
   char* wifiConfigURI = (char*)"/";
 
+  int wifiConnectAttempts = 3;
   int wifiConnectRetries = 20;
   int wifiConnectInterval = 500;
 
@@ -246,7 +248,7 @@ class ConfigManager {
   void handleSettingsGetREST();
   void handleSettingsPutREST();
 
-  bool wifiConnected();
+  bool wifiConnect(char* ssid, char* password);
   void setup();
   void startAP();
   void startAPApi();
