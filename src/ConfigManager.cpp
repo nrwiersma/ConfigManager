@@ -38,18 +38,25 @@ void ConfigManager::setup() {
       DebugPrintln(F("\""));
 
       EEPROM.get(MAGIC_LENGTH + SSID_LENGTH, password);
-      WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
 
-      if (wifiConnected()) {
-        DebugPrint(F("Connected to "));
-        DebugPrint(ssid);
-        DebugPrint(F(" with "));
-        DebugPrintln(WiFi.localIP());
+      int attempt = 0;
+      bool success = false;
 
-        WiFi.mode(WIFI_STA);
-
-        startApi();
+      while (attempt < this->wifiConnectAttempts && !success) {
+        attempt++;
+        DebugPrintln(F(""));
+        DebugPrint(F("Wifi connection attempt "));
+        DebugPrintln(attempt);
+        success = wifiConnect(ssid, password);
       }
+
+      if (success) {
+        startApi();
+      } else {
+        DebugPrintln(F(""));
+        DebugPrintln(F("Wifi connection could not be established"));
+      }
+
     } else {
       DebugPrintln(F("No SSID found"));
     }
@@ -192,26 +199,39 @@ void ConfigManager::setWifiConnectInterval(const int interval) {
 }
 
 bool ConfigManager::wifiConnected() {
-  DebugPrint(F("Waiting for WiFi to connect"));
+  return WiFi.status() == WL_CONNECTED;
+}
 
-  int i = 0;
-  while (i < wifiConnectRetries) {
-    if (WiFi.status() == WL_CONNECTED) {
-      DebugPrintln("");
+bool ConfigManager::wifiConnect(char* ssid, char* password) {
+  DebugPrintln(F("Waiting for WiFi to connect"));
+
+  bool connected = false;
+  int retry = 0;
+
+  WiFi.begin(ssid, password[0] == '\0' ? NULL : password);
+
+  while (retry < this->wifiConnectRetries && !connected) {
+    DebugPrint(F("."));
+
+    connected = this->wifiConnected();
+
+    if (connected) {
+      DebugPrintln(F(""));
+      DebugPrint(F("Connected to "));
+      DebugPrint(ssid);
+      DebugPrint(F(" with "));
+      DebugPrintln(WiFi.localIP());
+
       this->wifiMode = station;
-      return true;
+      WiFi.mode(WIFI_STA);
+    } else {
+      delay(wifiConnectInterval);
     }
 
-    DebugPrint(".");
-
-    delay(wifiConnectInterval);
-    i++;
+    retry++;
   }
 
-  DebugPrintln("");
-  DebugPrintln(F("Connection timed out"));
-
-  return false;
+  return connected;
 }
 
 void ConfigManager::storeWifiSettings(String ssid,
