@@ -507,6 +507,7 @@ void ConfigManager::handleAPPost() {
   storeWifiSettings(ssid, password);
 
   server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
+  delay(500); // Allow enough time for the response to be sent before restarting.
 
   ESP.restart();
 }
