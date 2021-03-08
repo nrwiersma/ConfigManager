@@ -72,9 +72,7 @@ class ConfigParameter : public BaseParameter {
 
   ParameterMode getMode() { return this->mode; }
 
-  void update(T value) {
-    *ptr = value;
-  }
+  void update(T value) { *ptr = value; }
 
   void fromJson(JsonObject* json) {
     if (json->containsKey(name) && json->getMember(name).is<T>()) {
@@ -125,12 +123,12 @@ class ConfigStringParameter : public BaseParameter {
   void fromJson(JsonObject* json) {
     if (json->containsKey(name) && json->getMember(name).is<char*>()) {
       const char* value = json->getMember(name).as<const char*>();
-        this->update(value);
+      this->update(value);
     }
   }
 
   void toJson(JsonObject* json) {
-    json->getOrAddMember(name).set((const char*) ptr);
+    json->getOrAddMember(name).set((const char*)ptr);
   }
 
   void clearData() {
