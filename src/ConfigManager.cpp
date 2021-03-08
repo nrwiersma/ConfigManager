@@ -76,10 +76,8 @@ void ConfigManager::setup() {
 }
 
 void ConfigManager::loop() {
-
   if (this->getMode() == ap) {
-    if (apTimeout > 0 &&
-        ((millis() - apStart) / 1000) > (uint16_t)apTimeout) {
+    if (apTimeout > 0 && ((millis() - apStart) / 1000) > (uint16_t)apTimeout) {
       ESP.restart();
     }
 
@@ -234,8 +232,7 @@ bool ConfigManager::wifiConnect(char* ssid, char* password) {
   return connected;
 }
 
-void ConfigManager::storeWifiSettings(String ssid,
-                                      String password) {
+void ConfigManager::storeWifiSettings(String ssid, String password) {
   char ssidChar[SSID_LENGTH];
   char passwordChar[PASSWORD_LENGTH];
 
@@ -380,6 +377,7 @@ void ConfigManager::writeConfig() {
   }
   this->commitChanges();
 }
+
 void ConfigManager::save() {
   this->writeConfig();
 }
@@ -461,7 +459,7 @@ void ConfigManager::streamFile(const char* file, const char mime[]) {
     f = SPIFFS.open(file, "r");
   } else {
     size_t len = strlen(file);
-    char filepath[len+1];
+    char filepath[len + 1];
     strcpy(filepath, "/");
     strcat(filepath, file);
     f = SPIFFS.open(filepath, "r");
@@ -475,7 +473,6 @@ void ConfigManager::streamFile(const char* file, const char mime[]) {
     DebugPrintln(file);
     handleNotFound();
   }
-
 }
 
 void ConfigManager::handleAPGet() {
@@ -505,9 +502,13 @@ void ConfigManager::handleAPPost() {
   }
 
   storeWifiSettings(ssid, password);
+  if (this->getMode() != station) {
+    this->writeConfig();
+  }
 
   server->send(204, FPSTR(mimePlain), F("Saved. Will attempt to reboot."));
-  delay(500); // Allow enough time for the response to be sent before restarting.
+  // Allow enough time for the response to be sent before restarting.
+  delay(500);
 
   ESP.restart();
 }
