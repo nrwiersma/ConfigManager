@@ -121,7 +121,7 @@ class ConfigStringParameter : public BaseParameter {
   }
 
   void fromJson(JsonObject* json) {
-    if (json->containsKey(name) && json->getMember(name).is<char*>()) {
+    if (json->containsKey(name) && json->getMember(name).is<const char*>()) {
       const char* value = json->getMember(name).as<const char*>();
       this->update(value);
     }
