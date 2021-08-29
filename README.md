@@ -1,6 +1,6 @@
 ![Logo](http://svg.wiersma.co.za/github/project?lang=cpp&title=ConfigManager&tag=wifi%20configuration%20manager)
 
-[![Build Status](https://travis-ci.com/nrwiersma/ConfigManager.svg?branch=master)](https://travis-ci.com/nrwiersma/ConfigManager)
+[![Build Status](https://github.com/nrwiersma/ConfigManager/actions/workflows/test.yml/badge.svg)](https://github.com/nrwiersma/ConfigManager/actions)
 [![arduino-library-badge](http://www.ardu-badge.com/badge/ConfigManager.svg)](http://www.ardu-badge.com/ConfigManager)
 
 Wifi connection and configuration manager for ESP8266 and ESP32.
