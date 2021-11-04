@@ -413,6 +413,7 @@ void ConfigManager::clearSettings(bool reboot) {
 // ConfigManager HTTP Utilities
 //
 void ConfigManager::startWebserver() {
+  this->server->enableCORS(true);
   this->server->begin();
   this->webserverRunning = true;
 }
@@ -542,6 +543,12 @@ void ConfigManager::handleSettingsPutREST() {
 }
 
 void ConfigManager::handleNotFound() {
+  if (server->method() == HTTP_OPTIONS) {
+    server->send(200);
+  } else {
+    server->send(404);
+  }
+
   String URI =
       toStringIP(server->client().localIP()) + String(":") + String(webPort);
   String header = server->hostHeader();
