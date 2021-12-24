@@ -120,13 +120,15 @@ void ConfigManager::startAP() {
   DebugPrintln(F("Starting Access Point"));
 
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(apName, apPassword);
-
-  delay(500);  // Need to wait to get IP
 
   IPAddress ip(192, 168, 1, 1);
   IPAddress NMask(255, 255, 255, 0);
   WiFi.softAPConfig(ip, ip, NMask);
+
+  // Need to wait to get IP
+  delay(500);
+
+  WiFi.softAP(apName, apPassword);
 
   DebugPrint("AP Name: ");
   DebugPrintln(apName);
