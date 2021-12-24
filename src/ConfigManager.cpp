@@ -125,7 +125,7 @@ void ConfigManager::startAP() {
   IPAddress NMask(255, 255, 255, 0);
   WiFi.softAPConfig(ip, ip, NMask);
 
-  // Need to wait to get IP
+  // Need to wait on config
   delay(500);
 
   WiFi.softAP(apName, apPassword);
