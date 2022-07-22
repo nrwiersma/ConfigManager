@@ -88,7 +88,9 @@ configManager.save();
 
 ### Additional files saved
 
-Upload the ```index.html``` file found in the ```data``` directory into the SPIFFS.
+Upload the ```index.html``` file found in the ```data``` directory into the LittleFS (note SPIFFS is currently deprecated).
+Please see: https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html
+
 Instructions on how to do this vary based on your IDE. Below are links instructions
 on the most common IDEs:
 
@@ -96,13 +98,13 @@ on the most common IDEs:
 
 * [Arduino IDE](http://arduino-esp8266.readthedocs.io/en/latest/filesystem.html#uploading-files-to-file-system)
 
-* [Platform IO](http://docs.platformio.org/en/stable/platforms/espressif.html#uploading-files-to-file-system-spiffs)
+* [Platform IO](http://docs.platformio.org/en/stable/platforms/espressif.html#uploading-files-to-file-system)
 
 #### ESP32
 
 * [Arduino IDE](https://github.com/me-no-dev/arduino-esp32fs-plugin)
 
-* [Platform IO](http://docs.platformio.org/en/stable/platforms/espressif32.html#uploading-files-to-file-system-spiffs)
+* [Platform IO](http://docs.platformio.org/en/stable/platforms/espressif32.html#uploading-files-to-file-system)
 
 # Documentation
 
@@ -146,7 +148,7 @@ void setAPPassword(const char *password)
 ```
 void setAPFilename(const char *filename)
 ```
-> Sets the path in SPIFFS to the webpage to be served by the access point.
+> Sets the path in LittleFS to the webpage to be served by the access point.
 
 ### setAPTimeout
 ```
