@@ -4,12 +4,12 @@
 #include <DNSServer.h>
 #include <EEPROM.h>
 #include <FS.h>
+#include <LittleFS.h>
 
 #if defined(ARDUINO_ARCH_ESP8266)  // ESP8266
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #elif defined(ARDUINO_ARCH_ESP32)  // ESP32
-#include <SPIFFS.h>
 #include <WebServer.h>
 #include <WiFi.h>
 #endif
