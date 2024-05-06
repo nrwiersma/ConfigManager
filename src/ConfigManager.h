@@ -75,15 +75,13 @@ class ConfigParameter : public BaseParameter {
   void update(T value) { *ptr = value; }
 
   void fromJson(JsonObject* json) {
-    if (json->containsKey(name) && json->getMember(name).is<T>()) {
-      this->update(json->getMember(name).as<T>());
+    const T value = (*json)[name];
+    if (value) {
+      this->update(value);
     }
   }
 
-  void toJson(JsonObject* json) {
-    // json->set(name, *ptr);
-    json->getOrAddMember(name).set(*ptr);
-  }
+  void toJson(JsonObject* json) { (*json)[name] = *ptr; }
 
   void clearData() {
     DebugPrint("Clearing: ");
@@ -121,15 +119,13 @@ class ConfigStringParameter : public BaseParameter {
   }
 
   void fromJson(JsonObject* json) {
-    if (json->containsKey(name) && json->getMember(name).is<const char*>()) {
-      const char* value = json->getMember(name).as<const char*>();
+    const char* value = (*json)[name];
+    if (value) {
       this->update(value);
     }
   }
 
-  void toJson(JsonObject* json) {
-    json->getOrAddMember(name).set((const char*)ptr);
-  }
+  void toJson(JsonObject* json) { (*json)[name] = (const char*)ptr; }
 
   void clearData() {
     DebugPrint("Clearing: ");
