@@ -492,8 +492,8 @@ void ConfigManager::handleAPPost() {
   if (isJson) {
     JsonObject obj = decodeJson(server->arg("plain"));
 
-    ssid = obj.getMember("ssid").as<String>();
-    password = obj.getMember("password").as<String>();
+    ssid = String((const char*)obj["ssid"]);
+    password = String((const char*)obj["password"]);
   } else {
     ssid = server->arg("ssid");
     password = server->arg("password");
