@@ -454,18 +454,18 @@ void ConfigManager::createBaseWebServer() {
 }
 
 void ConfigManager::streamFile(const char* file, const char mime[]) {
-  SPIFFS.begin();
+  LittleFS.begin();
 
   File f;
 
   if (file[0] == '/') {
-    f = SPIFFS.open(file, "r");
+    f = LittleFS.open(file, "r");
   } else {
     size_t len = strlen(file);
     char filepath[len + 1];
     strcpy(filepath, "/");
     strcat(filepath, file);
-    f = SPIFFS.open(filepath, "r");
+    f = LittleFS.open(filepath, "r");
   }
 
   if (f) {
