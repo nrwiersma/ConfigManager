@@ -274,8 +274,8 @@ void ConfigManager::clearWifiSettings(bool reboot) {
 }
 
 String ConfigManager::scanNetworks() {
-  DynamicJsonDocument doc(1024);
-  JsonArray jsonArray = doc.createNestedArray();
+  JsonDocument doc;
+  JsonArray jsonArray = doc.add<JsonArray>();
 
   DebugPrintln("Scanning WiFi networks...");
   int n = WiFi.scanNetworks();
@@ -299,7 +299,7 @@ String ConfigManager::scanNetworks() {
       DebugPrint(" - Security: ");
       DebugPrintln(security);
 
-      JsonObject obj = doc.createNestedObject();
+      JsonObject obj = doc.add<JsonObject>();
       obj["ssid"] = ssid;
       obj["strength"] = rssi;
       obj["security"] = security == "none" ? false : true;
@@ -316,7 +316,7 @@ String ConfigManager::scanNetworks() {
 // ConfigManager Config Utilities
 //
 JsonObject ConfigManager::decodeJson(String jsonString) {
-  DynamicJsonDocument doc(1024);
+  JsonDocument doc;
 
   if (jsonString.length() == 0) {
     return doc.as<JsonObject>();
@@ -351,8 +351,8 @@ void ConfigManager::readConfig() {
 }
 
 JsonObject ConfigManager::asJson() {
-  DynamicJsonDocument doc(1024);
-  JsonObject obj = doc.createNestedObject();
+  JsonDocument doc;
+  JsonObject obj = doc.add<JsonObject>();
 
   std::list<BaseParameter*>::iterator it;
   for (it = parameters.begin(); it != parameters.end(); ++it) {
@@ -531,7 +531,7 @@ void ConfigManager::handleSettingsGetREST() {
 }
 
 void ConfigManager::handleSettingsPutREST() {
-  DynamicJsonDocument doc(1024);
+  JsonDocument doc;
   auto error = deserializeJson(doc, server->arg("plain"));
   if (error) {
     server->send(400, FPSTR(mimeJSON), "");
