@@ -1,6 +1,6 @@
 {
   "name": "ConfigManager",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "keywords": "wifi, wi-fi, config",
   "description": "WiFi connection manager for ESP8266 and ESP32",
   "repository":
@@ -17,6 +17,6 @@
   {
     "name": "ArduinoJson",
     "frameworks": "arduino",
-    "version": "^6.0.0"
+    "version": "^7.3.0"
   }
 }
