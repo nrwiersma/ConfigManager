@@ -9,6 +9,11 @@ This library was made to ease the complication of configuring Wifi and other
 settings on an ESP8266 or ESP32. It is roughly split into two parts, Wifi configuration
 and REST variable configuration.
 
+> [!WARNING]
+> This project is no longer maintained.
+>
+> If you wish to update or extend, please do so in a fork.
+
 # Requires
 
 * [ArduinoJson](https://github.com/bblanchon/ArduinoJson) version 6
